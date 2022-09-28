@@ -5,6 +5,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Hashtable;
 
+import lexer.models.FloatConst;
+import lexer.models.IntegerConst;
+import lexer.models.Literal;
 import lexer.models.Tag;
 import lexer.models.Token;
 import lexer.models.Word;
@@ -65,13 +68,13 @@ public class LexerService {
             if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\b')
                 continue;
             else if (ch == '\n')
-                line++; // conta linhas
+                line++;
             else
                 break;
         }
 
         switch (ch) {
-            // Operadores
+            // Recognize LOGIC SYMBOLS
             case '&':
                 if (readch('&'))
                     return Word.and;
@@ -90,6 +93,8 @@ public class LexerService {
             case '<':
                 if (readch('='))
                     return Word.le;
+                if (readch('>'))
+                    return Word.ne;
                 else
                     return new Token('<');
             case '>':
@@ -99,7 +104,104 @@ public class LexerService {
                     return new Token('>');
         }
 
-        return null;
-    }
+        // Recognize comments and math symbols
+        switch (ch) {
+            case '/':
+                if (readch('/'))
+                    return new Word("//", Tag.COMMENT_LINE);
+                if (readch('*')) {
+                    do {
+                        readch();
+                        if (ch == '\n')
+                            line++;
+                    } while (ch != '*');
+                    if (readch('/'))
+                        return new Word("/**/", Tag.COMMENT_BLOCK);
+                }
+                return new Token('/');
 
+            case '+':
+                return new Token('+');
+            case '-':
+                return new Token('-');
+            case '*':
+                return new Token('*');
+            default:
+                break;
+        }
+
+        // Recognize IntegerConst or FloatConst
+        if (Character.isDigit(ch)) {
+            int value = 0;
+            do {
+                value = 10 * value + Character.digit(ch, 10);
+                readch();
+            } while (Character.isDigit(ch));
+
+            if (ch == '.') {
+                String floatConst = String.valueOf(value) + ch;
+
+                readch();
+                value = 0;
+                do {
+                    value = 10 * value + Character.digit(ch, 10);
+                    readch();
+                } while (Character.isDigit(ch));
+
+                floatConst += String.valueOf(value);
+
+                return new FloatConst(Float.parseFloat(floatConst));
+
+            }
+
+            return new IntegerConst(value);
+        }
+
+        // Recognize symbols
+        switch (ch) {
+            case '(':
+                return new Token('(');
+            case ')':
+                return new Token(')');
+            case ';':
+                return new Token(';');
+            case '=':
+                return new Token('=');
+            case ',':
+                return new Token(',');
+            default:
+                break;
+        }
+
+        // Identifiers
+        if (Character.isLetter(ch)) {
+            StringBuffer sb = new StringBuffer();
+            do {
+                sb.append(ch);
+                readch();
+            } while (Character.isLetterOrDigit(ch) || Character.compare(ch, '_') == 0);
+            String s = sb.toString();
+            Word w = (Word) words.get(s);
+            if (w != null)
+                return w; // palavra já existe na HashTable
+            w = new Word(s, Tag.IDENTIFIER);
+            words.put(s, w);
+            return w;
+        }
+
+        // Literal
+        if (ch == '{') {
+            String literal = "" + ch;
+            do {
+                readch();
+                literal += ch;
+            } while (ch != '}');
+            return new Literal(literal);
+        }
+
+        // Caracteres não especificados
+        Token token = new Token(ch);
+        ch = ' ';
+        return token;
+    }
 }
