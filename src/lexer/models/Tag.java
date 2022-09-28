@@ -29,8 +29,6 @@ public class Tag {
             DOT_COMMA = 274, // ";"
             COMMA = 275, // ","
             ASSIGN = 275, // "="
-            OPEN_BRACKET = 276, // "("
-            CLOSE_BRACKET = 277, // ")"
 
             // MATH SYMBOLS
             PLUS = 278, // "+"
@@ -44,12 +42,18 @@ public class Tag {
             GE = 284, // ">=",
             LT = 285, // "<",
             LE = 286, // "<=",
-            NE = 287, // "!=",
+            //NE = 287, // "!=",
             OR = 288, // "||",
             AND = 289, // "&&",
             NOT = 290, // "!",
+            NE = 290, // "<>",
+
 
             // ANOTHERS TOKENS
             IDENTIFIER = 291,
-            NUMBER = 292;
+            NUMBER = 292,
+            DIGIT = 293,
+            FLOAT_CONST = 294,
+            LITERAL = 295;
+            
 }
