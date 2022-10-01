@@ -1,15 +1,8 @@
 package lexer.controllers;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.sql.Date;
-import java.util.Hashtable;
 import java.util.Scanner;
 
-import lexer.models.Word;
 import lexer.services.LexerService;
-import lexer.models.Tag;
 import lexer.models.Token;
 
 public class LexerController {
@@ -21,8 +14,8 @@ public class LexerController {
 
         while (true) {
 
-            System.out.println("Temos 6 arquivos de teste,\n" +
-                    "os números de 1 a 6 se referem respectivamente a cada teste\n" +
+            System.out.println("Temos 6 arquivos de teste.\n" +
+                    "Os números de 1 a 6 se referem respectivamente a cada teste\n" +
                     "Digite o número do teste que deseja ser compilado : ");
 
             Scanner input = new Scanner(System.in);
@@ -59,11 +52,24 @@ public class LexerController {
 
             System.out.println("Reconhecimento dos tokens");
 
-            try {
-                Token token = service.scan();
-            } catch (Exception e) {
-                // TODO: handle exception
+            while (true) {
+                try {
+                    Token token = service.scan();
+                    if (token != null) {
+                        System.out.println(token.toString());
+                    } else {
+                        System.out.println("EOF");
+                        break;
+                    }
+                } catch (Exception e) {
+                    // TODO: handle exception
+                    System.out.println("Error with read file!");
+                    break;
+                }
             }
+
+            System.out.println("Tabela de Símbolos : ");
+            service.showSymbolsTable();
 
         }
 

@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Hashtable;
 
+import lexer.models.Error;
 import lexer.models.FloatConst;
 import lexer.models.IntegerConst;
 import lexer.models.Literal;
@@ -20,7 +21,8 @@ public class LexerService {
 
     private Hashtable words = new Hashtable();
 
-    public LexerService() { }
+    public LexerService() {
+    }
 
     public LexerService(String fileName) throws FileNotFoundException {
         try {
@@ -80,8 +82,14 @@ public class LexerService {
         // Recognize comments and math symbols
         switch (ch) {
             case '/':
-                if (readch('/'))
+                if (readch('/')) {
+                    do {
+                        readch();
+                    } while (ch != '\n');
+                    line++;
+                    ch = ' ';
                     return new Word("//", Tag.COMMENT_LINE);
+                }
                 if (readch('*')) {
                     do {
                         readch();
@@ -92,12 +100,14 @@ public class LexerService {
                         return new Word("/**/", Tag.COMMENT_BLOCK);
                 }
                 return new Token('/');
-
             case '+':
+                ch = ' ';
                 return new Token('+');
             case '-':
+                ch = ' ';
                 return new Token('-');
             case '*':
+                ch = ' ';
                 return new Token('*');
             default:
                 break;
@@ -126,15 +136,37 @@ public class LexerService {
                 if (readch('>'))
                     return Word.ne;
                 else
-                    return new Token('<');
+                    ch = ' ';
+                return new Token('<');
             case '>':
                 if (readch('='))
                     return Word.ge;
                 else
-                    return new Token('>');
+                    ch = ' ';
+                return new Token('>');
         }
 
-        
+        // Recognize symbols
+        switch (ch) {
+            case '(':
+                ch = ' ';
+                return new Token('(');
+            case ')':
+                ch = ' ';
+                return new Token(')');
+            case ';':
+                ch = ' ';
+                return new Token(';');
+            case '=':
+                ch = ' ';
+                return new Token('=');
+            case ',':
+                ch = ' ';
+                return new Token(',');
+            default:
+                break;
+        }
+
         // Recognize IntegerConst or FloatConst
         if (Character.isDigit(ch)) {
             int value = 0;
@@ -160,22 +192,6 @@ public class LexerService {
             }
 
             return new IntegerConst(value);
-        }
-
-        // Recognize symbols
-        switch (ch) {
-            case '(':
-                return new Token('(');
-            case ')':
-                return new Token(')');
-            case ';':
-                return new Token(';');
-            case '=':
-                return new Token('=');
-            case ',':
-                return new Token(',');
-            default:
-                break;
         }
 
         // Identifiers
@@ -205,8 +221,12 @@ public class LexerService {
         }
 
         // Caracteres não especificados
-        Token token = new Token(ch);
+        Token invalidToken = new Error(line, String.valueOf(ch));
         ch = ' ';
-        return token;
+        return invalidToken;
+    }
+
+    public void showSymbolsTable() {
+        words.values().forEach(word -> System.out.println(word));
     }
 }
