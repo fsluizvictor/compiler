@@ -20,6 +20,8 @@ public class LexerService {
 
     private Hashtable words = new Hashtable();
 
+    public LexerService() { }
+
     public LexerService(String fileName) throws FileNotFoundException {
         try {
             file = new FileReader(fileName);
@@ -64,12 +66,40 @@ public class LexerService {
 
     public Token scan() throws IOException {
 
+        keepAllReservedWords();
+
         for (;; readch()) {
             if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\b')
                 continue;
             else if (ch == '\n')
                 line++;
             else
+                break;
+        }
+
+        // Recognize comments and math symbols
+        switch (ch) {
+            case '/':
+                if (readch('/'))
+                    return new Word("//", Tag.COMMENT_LINE);
+                if (readch('*')) {
+                    do {
+                        readch();
+                        if (ch == '\n')
+                            line++;
+                    } while (ch != '*');
+                    if (readch('/'))
+                        return new Word("/**/", Tag.COMMENT_BLOCK);
+                }
+                return new Token('/');
+
+            case '+':
+                return new Token('+');
+            case '-':
+                return new Token('-');
+            case '*':
+                return new Token('*');
+            default:
                 break;
         }
 
@@ -104,32 +134,7 @@ public class LexerService {
                     return new Token('>');
         }
 
-        // Recognize comments and math symbols
-        switch (ch) {
-            case '/':
-                if (readch('/'))
-                    return new Word("//", Tag.COMMENT_LINE);
-                if (readch('*')) {
-                    do {
-                        readch();
-                        if (ch == '\n')
-                            line++;
-                    } while (ch != '*');
-                    if (readch('/'))
-                        return new Word("/**/", Tag.COMMENT_BLOCK);
-                }
-                return new Token('/');
-
-            case '+':
-                return new Token('+');
-            case '-':
-                return new Token('-');
-            case '*':
-                return new Token('*');
-            default:
-                break;
-        }
-
+        
         // Recognize IntegerConst or FloatConst
         if (Character.isDigit(ch)) {
             int value = 0;
