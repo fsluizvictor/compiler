@@ -54,6 +54,8 @@ public class Tag {
             NUMBER = 292,
             DIGIT = 293,
             FLOAT_CONST = 294,
-            LITERAL = 295;
+            LITERAL = 295,
+
+            ERROR = 296;
             
 }
