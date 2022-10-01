@@ -14,6 +14,6 @@ public class Literal extends Token {
     }
 
     public String getLiteral() {
-        return literal;
+        return "Literal - tag : " + this.tag + " valor : " + literal;
     }
 }
