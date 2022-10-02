@@ -22,19 +22,19 @@ public class LexerController {
 
         switch (testNumber) {
             case 1:
-                fullPath += "test1.txt";
+                fullPath += "test1v2.txt";
                 break;
             case 2:
-                fullPath += "test2.txt";
+                fullPath += "test2v2.txt";
                 break;
             case 3:
-                fullPath += "test3.txt";
+                fullPath += "test3v2.txt";
                 break;
             case 4:
-                fullPath += "test4.txt";
+                fullPath += "test4v2.txt";
                 break;
             case 5:
-                fullPath += "test5.txt";
+                fullPath += "test5v2.txt";
                 break;
             case 6:
                 fullPath += "test6.txt";
