@@ -218,6 +218,7 @@ public class LexerService {
                 readch();
                 literal += ch;
             } while (ch != '}');
+            ch = ' ';
             return new Literal(literal);
         }
 

@@ -10,10 +10,6 @@ public class Literal extends Token {
     }
 
     public String toString() {
-        return "" + literal;
-    }
-
-    public String getLiteral() {
         return "Literal - tag : " + this.tag + " valor : " + literal;
     }
 }
