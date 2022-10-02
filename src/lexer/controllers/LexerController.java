@@ -13,8 +13,9 @@ public class LexerController {
         LexerService service = null;
         int testNumber = 1;
 
-        System.out.println("Temos 6 arquivos de teste.\n" +
-                "Os números de 1 a 6 se referem respectivamente a cada teste\n" +
+        System.out.println("Temos 11 arquivos de teste.\n" +
+                "Os números de 1 a 6 se referem respectivamente a cada teste original(sujeito a ter erros) \n" +
+                "Os números de 7 a 11 se referem respectivamente a cada teste corrigido \n" +
                 "Digite o número do teste que deseja ser compilado : ");
 
         Scanner input = new Scanner(System.in);
@@ -38,6 +39,20 @@ public class LexerController {
                 break;
             case 6:
                 fullPath += "test6.txt";
+            case 7:
+                fullPath += "test1.txt";
+                break;
+            case 8:
+                fullPath += "test2.txt";
+                break;
+            case 9:
+                fullPath += "test3.txt";
+                break;
+            case 10:
+                fullPath += "test4.txt";
+                break;
+            case 11:
+                fullPath += "test5.txt";
                 break;
             default:
                 break;
