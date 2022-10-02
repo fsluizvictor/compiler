@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Hashtable;
 
+import lexer.models.EndOfFile;
 import lexer.models.Error;
 import lexer.models.FloatConst;
 import lexer.models.IntegerConst;
@@ -90,7 +91,7 @@ public class LexerService {
                     ch = ' ';
                     return new Word("//", Tag.COMMENT_LINE);
                 }
-                if (readch('*')) {
+                if (ch == '*') {
                     do {
                         readch();
                         if (ch == '\n')
@@ -218,6 +219,11 @@ public class LexerService {
                 literal += ch;
             } while (ch != '}');
             return new Literal(literal);
+        }
+
+        if (ch == '￿') {
+            Token eof = new EndOfFile(line, String.valueOf(ch));
+            return eof;
         }
 
         // Caracteres não especificados
