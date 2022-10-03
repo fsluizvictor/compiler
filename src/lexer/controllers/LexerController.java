@@ -11,7 +11,7 @@ public class LexerController {
 
         String fullPath = "/home/victor/Projects/compiler/tests/lexerTests/";
         LexerService service = null;
-        int testNumber = 1;
+        int testNumber;
 
         System.out.println("Temos 11 arquivos de teste.\n" +
                 "Os números de 1 a 6 se referem respectivamente a cada teste original(sujeito a ter erros) \n" +
@@ -39,6 +39,7 @@ public class LexerController {
                 break;
             case 6:
                 fullPath += "test6.txt";
+                break;
             case 7:
                 fullPath += "test1.txt";
                 break;
