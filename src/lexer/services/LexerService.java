@@ -92,10 +92,20 @@ public class LexerService {
                     return new Word("//", Tag.COMMENT_LINE);
                 }
                 if (ch == '*') {
+                    int tempLine = line;
+                    String error = "/*";
                     do {
                         readch();
+                        error += ch;
                         if (ch == '\n')
                             line++;
+                        if (ch == '￿') {
+                            Token invalidToken = new Error(tempLine, error);
+                            tempLine++;
+                            line = tempLine;
+                            ch = ' ';
+                            return invalidToken;
+                        }
                     } while (ch != '*');
                     if (readch('/'))
                         return new Word("/**/", Tag.COMMENT_BLOCK);
