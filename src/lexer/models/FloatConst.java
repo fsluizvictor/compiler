@@ -10,7 +10,7 @@ public class FloatConst extends Token {
     }
 
     public String toString() {
-        return "FloatConst - tag : " + this.tag + " valor : " + value;
+        return "FloatConst - tag: " + this.tag + " - valor: " + value;
     }
 
 }

@@ -9,7 +9,7 @@ import lexer.models.Token;
 public class LexerController {
     public static void main(String[] args) {
 
-        String fullPath = "/home/victor/Projects/compiler/tests/lexerTests/";
+        String fullPath = "../compiler/tests/lexerTests/";
         LexerService service = null;
         int testNumber;
 
@@ -23,37 +23,42 @@ public class LexerController {
 
         switch (testNumber) {
             case 1:
-                fullPath += "test1v2.txt";
+                fullPath += "test1.txt";
                 break;
             case 2:
-                fullPath += "test2v2.txt";
+                fullPath += "test2.txt";
                 break;
             case 3:
-                fullPath += "test3v2.txt";
+                fullPath += "test3.txt";
                 break;
             case 4:
-                fullPath += "test4v2.txt";
+                fullPath += "test4.txt";
                 break;
             case 5:
-                fullPath += "test5v2.txt";
+                fullPath += "test5.txt";
                 break;
             case 6:
                 fullPath += "test6.txt";
                 break;
             case 7:
-                fullPath += "test1.txt";
+                System.out.println("Teste 1 corrigido: ");
+                fullPath += "test1v2.txt";
                 break;
             case 8:
-                fullPath += "test2.txt";
+                System.out.println("Teste 2 corrigido: ");
+                fullPath += "test2v2.txt";
                 break;
             case 9:
-                fullPath += "test3.txt";
+                System.out.println("Teste 3 corrigido: ");
+                fullPath += "test3v2.txt";
                 break;
             case 10:
-                fullPath += "test4.txt";
+                System.out.println("Teste 4 corrigido: ");
+                fullPath += "test4v2.txt";
                 break;
             case 11:
-                fullPath += "test5.txt";
+                System.out.println("Teste 1 corrigido: ");
+                fullPath += "test5v2.txt";
                 break;
             default:
                 break;
@@ -66,14 +71,18 @@ public class LexerController {
         }
 
         System.out.println("Reconhecimento dos tokens");
-
+        int contError = 0;
         while (true) {
+           
             try {
                 Token token = service.scan();
                 if (token instanceof EndOfFile) {
                     break;
                 } else {
                     System.out.println(token.toString());
+                    if (token.toString().startsWith("Erro")) {
+                        contError++;
+                    }
                 }
             } catch (Exception e) {
                 System.out.println("Error with read file!");
@@ -82,5 +91,10 @@ public class LexerController {
         }
         System.out.println("Tabela de Símbolos : ");
         service.showSymbolsTable();
+        if (contError > 0) {
+            System.out.println("Analisador Léxico compilado com erro.");
+        }else {
+            System.out.println("Analisador Léxico compilado com sucesso.");
+        }
     }
 }
