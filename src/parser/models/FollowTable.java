@@ -9,17 +9,17 @@ import lexer.models.Tag;
 
 public class FollowTable {
     
-    Map<String, List<Tag>> follow = new HashMap<>();
+    Map<String, List<Integer>> follow = new HashMap<>();
 
     public FollowTable() {
         // program
-        List<Tag> program = new ArrayList<>();
+        List<Integer> program = new ArrayList<>();
         program.add(Tag.EOF);
         follow.put("program", program);
 
         // declList
         // [A-Za-z],_, [0-9], if, do, scan, print
-        List<Tag> declList = new ArrayList<>();
+        List<Integer> declList = new ArrayList<>();
         declList.add(Tag.IDENTIFIER);
         declList.add(Tag.UNDERSCORE); // underline - underscore
         declList.add(Tag.DIGIT); // [0-9]
@@ -31,7 +31,7 @@ public class FollowTable {
 
         // decl
         //int, float, string,[A-Za-z],_, [0-9], if, do, scan, print
-        List<Tag> decl = new ArrayList<>();
+        List<Integer> decl = new ArrayList<>();
         decl.add(Tag.INT);
         decl.add(Tag.FLOAT);
         decl.add(Tag.STRING);
@@ -45,13 +45,13 @@ public class FollowTable {
         follow.put("decl", decl);
 
         // identList
-        List<Tag> identList = new ArrayList<>();
+        List<Integer> identList = new ArrayList<>();
         identList.add(Tag.DOT_COMMA);
         follow.put("identList", identList);
 
         //type
         //[A-Za-z],_, [0-9]
-        List<Tag> type = new ArrayList<>();
+        List<Integer> type = new ArrayList<>();
         type.add(Tag.IDENTIFIER);
         type.add(Tag.UNDERSCORE);
         type.add(Tag.DIGIT);
@@ -59,7 +59,7 @@ public class FollowTable {
 
         //stmtList
         // exit, end, else, while
-        List<Tag> stmtList = new ArrayList<>();
+        List<Integer> stmtList = new ArrayList<>();
         stmtList.add(Tag.EXIT);
         stmtList.add(Tag.END);
         stmtList.add(Tag.ELSE);
@@ -68,7 +68,7 @@ public class FollowTable {
 
         //stmt
         //[A-Za-z],_, [0-9], if, do, scan, print, exit, end, else, while
-        List<Tag> stmt = new ArrayList<>();
+        List<Integer> stmt = new ArrayList<>();
         stmt.add(Tag.IDENTIFIER);
         stmt.add(Tag.UNDERSCORE);
         stmt.add(Tag.DIGIT);
@@ -83,13 +83,13 @@ public class FollowTable {
         follow.put("stmt", stmt);
 
         //assingStmt
-        List<Tag> assingStmt = new ArrayList<>();
+        List<Integer> assingStmt = new ArrayList<>();
         assingStmt.add(Tag.DOT_COMMA);  // ;
         follow.put("assingStmt", assingStmt);
 
         //ifStmt
         //[A-Za-z],_, [0-9], if, do, scan, print
-        List<Tag> ifStmt = new ArrayList<>();
+        List<Integer> ifStmt = new ArrayList<>();
         ifStmt.add(Tag.IDENTIFIER);
         ifStmt.add(Tag.UNDERSCORE);
         ifStmt.add(Tag.DIGIT);
@@ -101,9 +101,9 @@ public class FollowTable {
 
         //ifStmtPrime
         //[A-Za-z],_, [0-9], if, do, scan, print
-        List<Tag> ifStmtPrime = new ArrayList<>();
+        List<Integer> ifStmtPrime = new ArrayList<>();
         ifStmtPrime.add(Tag.IDENTIFIER);
-        ifStmtPrime.add(Tag.UNDERSCORE);
+        //ifStmtPrime.add(Tag.UNDERSCORE);
         ifStmtPrime.add(Tag.DIGIT);
         ifStmtPrime.add(Tag.IF);
         ifStmtPrime.add(Tag.DO);
@@ -112,14 +112,14 @@ public class FollowTable {
         follow.put("ifStmtPrime", ifStmtPrime);
 
         //condition
-        List<Tag> condition = new ArrayList<>();
+        List<Integer> condition = new ArrayList<>();
         condition.add(Tag.THEN);
         condition.add(Tag.END);
         follow.put("condition", condition);
 
         //whileStmt
         // [A-Za-z],_, [0-9], if, do, scan, print, exit, end, else, while
-        List<Tag> whileStmt = new ArrayList<>();
+        List<Integer> whileStmt = new ArrayList<>();
         whileStmt.add(Tag.IDENTIFIER);
         whileStmt.add(Tag.UNDERSCORE);
         whileStmt.add(Tag.DIGIT);
@@ -135,7 +135,7 @@ public class FollowTable {
 
         //stmtSufix
         // [A-Za-z],_, [0-9], if, do, scan, print, exit, end, else, while
-        List<Tag> stmtSufix = new ArrayList<>();
+        List<Integer> stmtSufix = new ArrayList<>();
         stmtSufix.add(Tag.IDENTIFIER);
         stmtSufix.add(Tag.UNDERSCORE);
         stmtSufix.add(Tag.DIGIT);
@@ -150,29 +150,29 @@ public class FollowTable {
         follow.put("stmtSufix", stmtSufix);
 
         //readStmt
-        List<Tag> readStmt = new ArrayList<>();
+        List<Integer> readStmt = new ArrayList<>();
         readStmt.add(Tag.DOT_COMMA);
         follow.put("readStmt", readStmt);
 
         //writeStmt
-        List<Tag> writeStmt = new ArrayList<>();
+        List<Integer> writeStmt = new ArrayList<>();
         writeStmt.add(Tag.DOT_COMMA);
         follow.put("writeStmt", writeStmt);
 
         //writable
-        List<Tag> writable = new ArrayList<>();
+        List<Integer> writable = new ArrayList<>();
         writable.add(Tag.CLOSE_PARENTHESES);
         follow.put("writable", writable);
 
         //expression
-        List<Tag> expression = new ArrayList<>();
+        List<Integer> expression = new ArrayList<>();
         expression.add(Tag.THEN);
         expression.add(Tag.END);
         expression.add(Tag.CLOSE_PARENTHESES);
         follow.put("expression", expression);
 
         //expressionPrime
-        List<Tag> expressionPrime = new ArrayList<>();
+        List<Integer> expressionPrime = new ArrayList<>();
         expressionPrime.add(Tag.THEN);
         expressionPrime.add(Tag.END);
         expressionPrime.add(Tag.CLOSE_PARENTHESES);
@@ -180,7 +180,7 @@ public class FollowTable {
 
         //simpleExpr
         //  ), then, end, ==, >, >=, <, <=, <>
-        List<Tag> simpleExpr = new ArrayList<>();
+        List<Integer> simpleExpr = new ArrayList<>();
         simpleExpr.add(Tag.CLOSE_PARENTHESES);
         simpleExpr.add(Tag.THEN);
         simpleExpr.add(Tag.END);
@@ -194,7 +194,7 @@ public class FollowTable {
 
         //simpleExprPrime
         // ), then, end, ==, >, >=, <, <=, <>
-        List<Tag> simpleExprPrime = new ArrayList<>();
+        List<Integer> simpleExprPrime = new ArrayList<>();
         simpleExprPrime.add(Tag.CLOSE_PARENTHESES);
         simpleExprPrime.add(Tag.THEN);
         simpleExprPrime.add(Tag.END);
@@ -208,7 +208,7 @@ public class FollowTable {
 
         //term
         //  ), then, end,==, >, >=, <, <=, <>, -, ||, +
-        List<Tag> term = new ArrayList<>();
+        List<Integer> term = new ArrayList<>();
         term.add(Tag.CLOSE_PARENTHESES);
         term.add(Tag.THEN);
         term.add(Tag.END);
@@ -225,7 +225,7 @@ public class FollowTable {
 
         //termPrime
         //  ), then, end,==, >, >=, <, <=, <>, -, ||, +
-        List<Tag> termPrime = new ArrayList<>();
+        List<Integer> termPrime = new ArrayList<>();
         termPrime.add(Tag.CLOSE_PARENTHESES);
         termPrime.add(Tag.THEN);
         termPrime.add(Tag.END);
@@ -242,7 +242,7 @@ public class FollowTable {
 
         //factorA
         //  ), then, end,==, >, >=, <, <=, <>, -, ||, +, *,/, &&
-        List<Tag> factorA = new ArrayList<>();
+        List<Integer> factorA = new ArrayList<>();
         factorA.add(Tag.CLOSE_PARENTHESES);
         factorA.add(Tag.THEN);
         factorA.add(Tag.END);
@@ -262,7 +262,7 @@ public class FollowTable {
 
         //factor
         // ), then, end,==, >, >=, <, <=, <>, -, ||, +, *,/, &&
-        List<Tag> factor = new ArrayList<>();
+        List<Integer> factor = new ArrayList<>();
         factor.add(Tag.CLOSE_PARENTHESES);
         factor.add(Tag.THEN);
         factor.add(Tag.END);
@@ -282,7 +282,7 @@ public class FollowTable {
 
         //relop
         // [A-Za-z],_, [0-9], ", (, !, -
-        List<Tag> relop = new ArrayList<>();
+        List<Integer> relop = new ArrayList<>();
         relop.add(Tag.IDENTIFIER);
         relop.add(Tag.UNDERSCORE);
         relop.add(Tag.DIGIT);
@@ -294,7 +294,7 @@ public class FollowTable {
 
         //addop
         // [A-Za-z],_, [0-9], ", (, !, -
-        List<Tag> addop = new ArrayList<>();
+        List<Integer> addop = new ArrayList<>();
         addop.add(Tag.IDENTIFIER);
         addop.add(Tag.UNDERSCORE);
         addop.add(Tag.DIGIT);
@@ -306,7 +306,7 @@ public class FollowTable {
 
         //mulop
         // [A-Za-z],_,[0-9],{, ", (, !, -
-        List<Tag> mulop = new ArrayList<>();
+        List<Integer> mulop = new ArrayList<>();
         mulop.add(Tag.IDENTIFIER);
         mulop.add(Tag.UNDERSCORE);
         mulop.add(Tag.DIGIT);
@@ -319,7 +319,7 @@ public class FollowTable {
 
         //constant
         // ), then, end,==, >, >=, <, <=, <>, -, ||, +, *,/, &&
-        List<Tag> constant = new ArrayList<>();
+        List<Integer> constant = new ArrayList<>();
         constant.add(Tag.CLOSE_PARENTHESES);
         constant.add(Tag.THEN);
         constant.add(Tag.END);
@@ -339,7 +339,7 @@ public class FollowTable {
 
         //integerConst
         // ), then, end,==, >, >=, <, <=, <>, -, ||, +, *,/, &&
-        List<Tag> integerConst = new ArrayList<>();
+        List<Integer> integerConst = new ArrayList<>();
         integerConst.add(Tag.CLOSE_PARENTHESES);
         integerConst.add(Tag.THEN);
         integerConst.add(Tag.END);
@@ -359,7 +359,7 @@ public class FollowTable {
 
         // float_const
         // ), then, end,==, >, >=, <, <=, <>, -, ||, +, *,/, &&
-        List<Tag> literal = new ArrayList<>();
+        List<Integer> literal = new ArrayList<>();
         floatConst.add(Tag.CLOSE_PARENTHESES);
         floatConst.add(Tag.THEN);
         floatConst.add(Tag.END);
@@ -379,7 +379,7 @@ public class FollowTable {
 
         //literal
         // ), then, end,==, >, >=, <, <=, <>, -, ||, +, *,/, &&
-        List<Tag> literal = new ArrayList<>();
+        List<Integer> literal = new ArrayList<>();
         literal.add(Tag.CLOSE_PARENTHESES);
         literal.add(Tag.THEN);
         literal.add(Tag.END);
@@ -399,7 +399,7 @@ public class FollowTable {
 
         //identifier
         // [A-Za-z],_, [0-9],;, =,), then, end,==, >, >=, <, <=, <>, -, ||, +, *,/, &&
-        List<Tag> identifier = new ArrayList<>();
+        List<Integer> identifier = new ArrayList<>();
         identifier.add(Tag.IDENTIFIER);
         identifier.add(Tag.UNDERSCORE); // UNDERSCORE
         identifier.add(Tag.DIGIT);
@@ -424,7 +424,7 @@ public class FollowTable {
 
         //identifier'
         // [A-Za-z],_, [0-9],;, =,), then, end,==, >, >=, <, <=, <>, -, ||, +, *,/, &&
-        List<Tag> identifierPrime = new ArrayList<>();
+        List<Integer> identifierPrime = new ArrayList<>();
         identifierPrime.add(Tag.IDENTIFIER);
         identifierPrime.add(Tag.UNDERSCORE); // UNDERSCORE
         identifierPrime.add(Tag.DIGIT);
@@ -449,7 +449,7 @@ public class FollowTable {
     
         //identifier'
         // [A-Za-z],_, [0-9],;, =,), then, end,==, >, >=, <, <=, <>, -, ||, +, *,/, &&
-        List<Tag> letter = new ArrayList<>();
+        List<Integer> letter = new ArrayList<>();
         letter.add(Tag.IDENTIFIER);
         letter.add(Tag.UNDERSCORE); // UNDERSCORE
         letter.add(Tag.DIGIT);
@@ -474,7 +474,7 @@ public class FollowTable {
 
         //identifier'
         // ), then, end,==, >, >=, <, <=, <>, -, ||, +, *, [A-Za-z],_, [0-9],;, =,/, &&
-        List<Tag> digit = new ArrayList<>();
+        List<Integer> digit = new ArrayList<>();
         digit.add(Tag.CLOSE_PARENTHESES);
         digit.add(Tag.THEN);
         digit.add(Tag.END);
@@ -497,12 +497,12 @@ public class FollowTable {
         digit.add(Tag.AND);
         follow.put("digit", digit);
 
-        List<Tag> caractere = new ArrayList<>();
+        List<Integer> caractere = new ArrayList<>();
         caractere.add(Tag.LITERAL);  // }
         follow.put("caractere", caractere);
     }
 
-    public List<Tag> getFollow(String key) {
+    public List<Integer> getFollow(String key) {
         return follow.get(key);
     }
 }
