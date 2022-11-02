@@ -12,8 +12,8 @@ public class Error extends Token {
     }
 
     public String toString() {
-        return "Erro - Caracter Inválido - Tag : " + Tag.ERROR
-                + " linha : " + line
-                + " lexeme : " + lexeme;
+        return "Erro - Caracter Inválido - Tag: " + Tag.ERROR
+                + " - linha: " + line
+                + " - lexema: " + lexeme;
     }
 }

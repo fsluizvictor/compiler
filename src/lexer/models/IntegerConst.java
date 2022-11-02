@@ -10,6 +10,6 @@ public class IntegerConst extends Token {
     }
 
     public String toString() {
-        return "IntegerConst - tag : " + this.tag + " valor : " + value;
+        return "IntegerConst - tag: " + this.tag + " - valor: " + value;
     }
 }

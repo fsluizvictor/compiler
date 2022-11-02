@@ -80,49 +80,49 @@ public class LexerService {
                 break;
         }
 
-        // Recognize comments and math symbols
-        switch (ch) {
-            case '/':
-                if (readch('/')) {
-                    do {
-                        readch();
-                    } while (ch != '\n');
-                    line++;
-                    ch = ' ';
-                    return new Word("//", Tag.COMMENT_LINE);
-                }
-                if (ch == '*') {
-                    int tempLine = line;
-                    String error = "/*";
-                    do {
-                        readch();
-                        error += ch;
-                        if (ch == '\n')
+                // Recognize comments and math symbols
+                switch (ch) {
+                    case '/':
+                        if (readch('/')) {
+                            do {
+                                readch();
+                            } while (ch != '\n');
                             line++;
-                        if (ch == '￿') {
-                            Token invalidToken = new Error(tempLine, error);
-                            tempLine++;
-                            line = tempLine;
                             ch = ' ';
-                            return invalidToken;
+                            return new Word("//", Tag.COMMENT_LINE);
                         }
-                    } while (ch != '*');
-                    if (readch('/'))
-                        return new Word("/**/", Tag.COMMENT_BLOCK);
+                        if (ch == '*') {
+                            int tempLine = line;
+                            String error = "/*";
+                            do {
+                                readch();
+                                error += ch;
+                                if (ch == '\n')
+                                    line++;
+                                if (ch == '￿') {
+                                    Token invalidToken = new Error(tempLine, error);
+                                    tempLine++;
+                                    line = tempLine;
+                                    ch = ' ';
+                                    return invalidToken;
+                                }
+                            } while (ch != '*');
+                            if (readch('/'))
+                                return new Word("/**/", Tag.COMMENT_BLOCK);
+                        }
+                        return new Token('/');
+                    case '+':
+                        ch = ' ';
+                        return new Token('+');
+                    case '-':
+                        ch = ' ';
+                        return new Token('-');
+                    case '*':
+                        ch = ' ';
+                        return new Token('*');
+                    default:
+                        break;
                 }
-                return new Token('/');
-            case '+':
-                ch = ' ';
-                return new Token('+');
-            case '-':
-                ch = ' ';
-                return new Token('-');
-            case '*':
-                ch = ' ';
-                return new Token('*');
-            default:
-                break;
-        }
 
         switch (ch) {
             // Recognize LOGIC SYMBOLS

@@ -11,8 +11,8 @@ public class EndOfFile extends Token {
     }
 
     public String toString() {
-        return "Final de Arquivo - Tag : " + Tag.EOF
-                + " linha : " + line
-                + " lexeme : " + lexeme;
+        return "Final de Arquivo - Tag: " + Tag.EOF
+                + " - linha: " + line
+                + " - lexema: " + lexeme;
     }
 }

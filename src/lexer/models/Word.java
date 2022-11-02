@@ -21,7 +21,7 @@ public class Word extends Token {
     }
 
     public String toString() {
-        return "Word - tag : " + this.tag + " valor : " + lexeme;
+        return "Word - tag: " + this.tag + " - valor: " + lexeme;
     }
 
 }
