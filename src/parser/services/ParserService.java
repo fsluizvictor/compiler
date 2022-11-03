@@ -372,53 +372,190 @@ public class ParserService {
         return true;
     }
 
+    // VERIFICAR
     // term​ ​::=​ ​factor-a​ ​term’
     public boolean term() {
+        if (token.getTag() == Tag.IDENTIFIER ||
+                token.getTag() == Tag.OPEN_PARENTHESES ||
+                token.getTag() == Tag.NOT ||
+                token.getTag() == Tag.MINUS) {
+            factorA();
+            termPrime();
+        }
         return true;
     }
 
     // term’​ ​::=​ ​mulop​ ​factor-a​ ​term’​ ​|​ ​𝛌
     public boolean termPrime() {
+        if (token.getTag() == Tag.MULTIPLICATION ||
+                token.getTag() == Tag.DIVISION ||
+                token.getTag() == Tag.AND) {
+            mulop();
+            factorA();
+            termPrime();
+        } else if (token.getTag() == Tag.THEN ||
+                token.getTag() == Tag.END ||
+                token.getTag() == Tag.CLOSE_PARENTHESES ||
+                token.getTag() == Tag.MINUS ||
+                token.getTag() == Tag.EQ ||
+                token.getTag() == Tag.GT ||
+                token.getTag() == Tag.GE ||
+                token.getTag() == Tag.LT ||
+                token.getTag() == Tag.LE ||
+                token.getTag() == Tag.NE ||
+                token.getTag() == Tag.PLUS ||
+                token.getTag() == Tag.OR) {
+        }
         return true;
     }
 
+    // Verificar
     // fator-a ::= factor | "!" factor | "-" factor
     public boolean factorA() {
+        if (token.getTag() == Tag.IDENTIFIER) {
+            factor();
+        }
+        if (token.getTag() == Tag.NOT) {
+            if (!eat(Tag.NOT)) {
+                return false;
+            }
+            factor();
+        }
+        if (token.getTag() == Tag.MINUS) {
+            if (!eat(Tag.MINUS)) {
+                return false;
+            }
+            factor();
+        }
         return true;
     }
 
+    // verificar
     // factor ::= identifier | constant | "(" expression ")"
     public boolean factor() {
+        if (token.getTag() == Tag.IDENTIFIER) {
+            identifier();
+        }
+        if (token.getTag() == Tag.DIGIT) {
+            constant();
+        }
+        if (token.getTag() == Tag.OPEN_PARENTHESES) {
+            if (!eat(Tag.OPEN_PARENTHESES)) {
+                return false;
+            }
+            expression();
+            if (!eat(Tag.CLOSE_PARENTHESES)) {
+                return false;
+            }
+        }
         return true;
     }
 
     // relop ::= "==" | ">" | ">=" | "<" | "<=" | "<>"
     public boolean relop() {
+        if (token.getTag() == Tag.EQ) {
+            if (!eat(Tag.EQ)) {
+                return false;
+            }
+        } else if (token.getTag() == Tag.GT) {
+            if (!eat(Tag.GT)) {
+                return false;
+            }
+        } else if (token.getTag() == Tag.GE) {
+            if (!eat(Tag.GE)) {
+                return false;
+            }
+        } else if (token.getTag() == Tag.LT) {
+            if (!eat(Tag.LT)) {
+                return false;
+            }
+        } else if (token.getTag() == Tag.LE) {
+            if (!eat(Tag.LE)) {
+                return false;
+            }
+        } else if (token.getTag() == Tag.NE) {
+            if (!eat(Tag.NE)) {
+                return false;
+            }
+        }
         return true;
     }
 
     // addop ::= "+" | "-" | "||"
     public boolean addop() {
+        if (token.getTag() == Tag.PLUS) {
+            if (!eat(Tag.PLUS)) {
+                return false;
+            }
+        } else if (token.getTag() == Tag.MINUS) {
+            if (!eat(Tag.MINUS)) {
+                return false;
+            }
+        } else if (token.getTag() == Tag.OR) {
+            if (!eat(Tag.OR)) {
+                return false;
+            }
+        }
         return true;
     }
 
     // mulop ::= "*" | "/" | "&&"
     public boolean mulop() {
+        if (token.getTag() == Tag.MULTIPLICATION) {
+            if (!eat(Tag.MULTIPLICATION)) {
+                return false;
+            }
+        } else if (token.getTag() == Tag.DIVISION) {
+            if (!eat(Tag.DIVISION)) {
+                return false;
+            }
+        } else if (token.getTag() == Tag.AND) {
+            if (!eat(Tag.AND)) {
+                return false;
+            }
+        }
         return true;
     }
 
     // constant ::= integer_const | float_const | literal
     public boolean constant() {
+        if (token.getTag() == Tag.DIGIT) {
+            integerConst();
+        }
+        if (token.getTag() == Tag.FLOAT_CONST) {
+            floatConst();
+        }
+        if (token.getTag() == Tag.LITERAL) {
+            literal();
+        }
         return true;
     }
 
+    // verificar
     // integer_const ::= digit+
     public boolean integerConst() {
+        if (token.getTag() == Tag.DIGIT) {
+            if (!eat(Tag.DIGIT)) {
+                return false;
+            }
+        }
         return true;
     }
 
+    // verificar
     // float_const ::= digit+“.”digit+
     public boolean floatConst() {
+        if (token.getTag() == Tag.DIGIT) {
+            if (!eat(Tag.DIGIT)) {
+                return false;
+            }
+            if (!eat(Tag.COMMA)) {
+                return false;
+            }
+            if (!eat(Tag.DIGIT)) {
+                return false;
+            }
+        }
         return true;
     }
 
@@ -434,6 +571,7 @@ public class ParserService {
 
     // identifier ::= (letter | identifier’)
     public boolean identifier() {
+
         return true;
     }
 
@@ -449,6 +587,11 @@ public class ParserService {
 
     // digit ::= [0-9]
     public boolean digit() {
+        if (token.getTag() == Tag.DIGIT) {
+            if (!eat(Tag.DIGIT)) {
+                return false;
+            }
+        }
         return true;
     }
 
