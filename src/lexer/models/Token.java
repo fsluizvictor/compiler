@@ -10,4 +10,8 @@ public class Token {
     public String toString() {
         return "tag: " + this.tag + " - valor: " + (char) this.tag;
     }
+
+    public int getTag() {
+        return tag;
+    }
 }

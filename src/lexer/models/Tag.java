@@ -55,6 +55,7 @@ public class Tag {
             DIGIT = 293,
             FLOAT_CONST = 294,
             LITERAL = 295,
+            UNDERSCORE = 298,
 
             ERROR = 296,
             EOF = 297;
