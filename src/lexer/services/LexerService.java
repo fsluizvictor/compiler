@@ -199,7 +199,6 @@ public class LexerService {
                 floatConst += String.valueOf(value);
 
                 return new FloatConst(Float.parseFloat(floatConst));
-
             }
 
             return new IntegerConst(value);

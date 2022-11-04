@@ -1,11 +1,6 @@
 package parser.services;
 
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
-import lexer.controllers.*;
 import lexer.models.*;
 import lexer.services.*;
 
@@ -13,8 +8,8 @@ public class ParserService {
 
     private final LexerService lexer;
     private Token token;
-    private final List<Integer> tags;
     private boolean eof;
+    private ErrorService errorService;
 
     /**
      * @param filename
@@ -22,8 +17,8 @@ public class ParserService {
      */
     public ParserService(String filename) throws FileNotFoundException {
         lexer = new LexerService(filename);
-        tags = new ArrayList<Integer>();
-        eof = false;
+        errorService = new ErrorService();
+        this.eof = false;
     }
 
     private void advance() {
@@ -88,6 +83,8 @@ public class ParserService {
             do {
                 decl();
             } while (token.getTag() == Tag.INT || token.getTag() == Tag.STRING || token.getTag() == Tag.FLOAT);
+        } else {
+            errorService.showError(lexer.line, "decl-list");
         }
 
         return true;
@@ -99,6 +96,8 @@ public class ParserService {
             type();
             identList();
             return eat(Tag.DOT_COMMA);
+        } else {
+            errorService.showError(lexer.line, "decl");
         }
 
         return true;
@@ -106,13 +105,17 @@ public class ParserService {
 
     // ident-list ::= identifier {"," identifier}
     public boolean identList() {
-        identifier();
-        do {
-            if (!eat(Tag.COMMA)) {
-                return false;
-            }
+        if (token.getTag() == Tag.IDENTIFIER) {
             identifier();
-        } while (token.getTag() == Tag.COMMA);
+            do {
+                if (!eat(Tag.COMMA)) {
+                    return false;
+                }
+                identifier();
+            } while (token.getTag() == Tag.COMMA);
+        } else {
+            errorService.showError(lexer.line, "ident-list");
+        }
 
         return true;
     }
@@ -121,12 +124,12 @@ public class ParserService {
     public boolean type() {
         if (token.getTag() == Tag.INT) {
             return eat(Tag.INT);
-        }
-        if (token.getTag() == Tag.STRING) {
+        } else if (token.getTag() == Tag.STRING) {
             return eat(Tag.STRING);
-        }
-        if (token.getTag() == Tag.FLOAT) {
+        } else if (token.getTag() == Tag.FLOAT) {
             return eat(Tag.FLOAT);
+        } else {
+            errorService.showError(lexer.line, "type");
         }
         return true;
     }
@@ -145,30 +148,29 @@ public class ParserService {
                     token.getTag() == Tag.DO ||
                     token.getTag() == Tag.SCAN ||
                     token.getTag() == Tag.PRINT);
+        } else {
+            errorService.showError(lexer.line, "stmt-list");
         }
         return true;
     }
 
-    // stmt ::= assign-stmt ";" | if-stmt | while-stmt | read-stmt ";" | write-stmt
-    // ";"
+    // stmt ::= assign-stmt ";" | if-stmt | while-stmt | read-stmt ";" | write-stmt ";"
     public boolean stmt() {
         if (token.getTag() == Tag.IDENTIFIER) {
             assignStmt();
             return eat(Tag.DOT_COMMA);
-        }
-        if (token.getTag() == Tag.IF) {
+        } else if (token.getTag() == Tag.IF) {
             ifStmt();
-        }
-        if (token.getTag() == Tag.WHILE) {
+        } else if (token.getTag() == Tag.WHILE) {
             whileStmt();
-        }
-        if (token.getTag() == Tag.SCAN) {
+        } else if (token.getTag() == Tag.SCAN) {
             readStmt();
             return eat(Tag.DOT_COMMA);
-        }
-        if (token.getTag() == Tag.PRINT) {
+        } else if (token.getTag() == Tag.PRINT) {
             readStmt();
             return eat(Tag.DOT_COMMA);
+        } else {
+            errorService.showError(lexer.line, "stmt");
         }
         return true;
     }
@@ -181,6 +183,8 @@ public class ParserService {
                 return false;
             }
             simpleExpr();
+        } else {
+            errorService.showError(lexer.line, "assign-stmt");
         }
         return true;
     }
@@ -197,6 +201,8 @@ public class ParserService {
             }
             stmtList();
             ifStmtPrime();
+        } else {
+            errorService.showError(lexer.line, "if-stmt");
         }
         return true;
     }
@@ -217,6 +223,8 @@ public class ParserService {
                     return false;
                 }
             }
+        } else {
+            errorService.showError(lexer.line, "if-stmt'");
         }
 
         return true;
@@ -231,6 +239,8 @@ public class ParserService {
                 token.getTag() == Tag.PLUS ||
                 token.getTag() == Tag.OR) {
             expression();
+        } else {
+            errorService.showError(lexer.line, "condition");
         }
 
         return true;
@@ -244,6 +254,8 @@ public class ParserService {
             }
             stmtList();
             stmtSufix();
+        } else {
+            errorService.showError(lexer.line, "while-stmt");
         }
         return true;
     }
@@ -258,6 +270,8 @@ public class ParserService {
             if (!eat(Tag.END)) {
                 return false;
             }
+        } else {
+            errorService.showError(lexer.line, "stmt-sufix");
         }
         return true;
     }
@@ -272,9 +286,9 @@ public class ParserService {
                 return false;
             }
             identifier();
-            if (!eat(Tag.CLOSE_PARENTHESES)) {
-                return false;
-            }
+            return eat(Tag.CLOSE_PARENTHESES);
+        } else {
+            errorService.showError(lexer.line, "read-stmt");
         }
         return true;
     }
@@ -292,6 +306,8 @@ public class ParserService {
             if (!eat(Tag.CLOSE_PARENTHESES)) {
                 return false;
             }
+        } else {
+            errorService.showError(lexer.line, "write-stmt");
         }
         return true;
     }
@@ -305,6 +321,8 @@ public class ParserService {
             simpleExpr();
         } else if (token.getTag() == Tag.LITERAL) {
             literal();
+        } else {
+            errorService.showError(lexer.line, "writable");
         }
         return true;
     }
@@ -318,6 +336,8 @@ public class ParserService {
                 token.getTag() == Tag.MINUS) {
             simpleExpr();
             expressionPrime();
+        } else {
+            errorService.showError(lexer.line, "expression​");
         }
         return true;
     }
@@ -336,6 +356,8 @@ public class ParserService {
                 token.getTag() == Tag.END ||
                 token.getTag() == Tag.CLOSE_PARENTHESES) {
 
+        } else {
+            errorService.showError(lexer.line, "expression'");
         }
         return true;
     }
@@ -348,6 +370,8 @@ public class ParserService {
                 token.getTag() == Tag.MINUS) {
             term();
             simpleExprPrime();
+        } else {
+            errorService.showError(lexer.line, "simple-expr​");
         }
         return true;
     }
@@ -367,12 +391,14 @@ public class ParserService {
                 token.getTag() == Tag.EQ ||
                 token.getTag() == Tag.GE || token.getTag() == Tag.LT ||
                 token.getTag() == Tag.LE || token.getTag() == Tag.NOT) {
+        } else {
+            errorService.showError(lexer.line, "simple-expr’​");
         }
 
         return true;
     }
 
-    // VERIFICAR
+    // VERIFICAR == ok
     // term​ ​::=​ ​factor-a​ ​term’
     public boolean term() {
         if (token.getTag() == Tag.IDENTIFIER ||
@@ -381,6 +407,8 @@ public class ParserService {
                 token.getTag() == Tag.MINUS) {
             factorA();
             termPrime();
+        } else {
+            errorService.showError(lexer.line, "term");
         }
         return true;
     }
@@ -405,48 +433,54 @@ public class ParserService {
                 token.getTag() == Tag.NE ||
                 token.getTag() == Tag.PLUS ||
                 token.getTag() == Tag.OR) {
+        } else {
+            errorService.showError(lexer.line, "term’");
         }
         return true;
     }
 
-    // Verificar
+    // Verificar = ok
     // fator-a ::= factor | "!" factor | "-" factor
     public boolean factorA() {
-        if (token.getTag() == Tag.IDENTIFIER) {
+        if (token.getTag() == Tag.IDENTIFIER ||
+                token.getTag() == Tag.DIGIT ||
+                token.getTag() == Tag.LITERAL ||
+                token.getTag() == Tag.OPEN_PARENTHESES ||
+                token.getTag() == Tag.NOT ||
+                token.getTag() == Tag.MINUS) {
             factor();
-        }
-        if (token.getTag() == Tag.NOT) {
+        } else if (token.getTag() == Tag.NOT) {
             if (!eat(Tag.NOT)) {
                 return false;
             }
             factor();
-        }
-        if (token.getTag() == Tag.MINUS) {
+        } else if (token.getTag() == Tag.MINUS) {
             if (!eat(Tag.MINUS)) {
                 return false;
             }
             factor();
+        } else {
+            errorService.showError(lexer.line, "fator-a");
         }
         return true;
     }
 
-    // verificar
+    // verificar - ok
     // factor ::= identifier | constant | "(" expression ")"
     public boolean factor() {
         if (token.getTag() == Tag.IDENTIFIER) {
             identifier();
-        }
-        if (token.getTag() == Tag.DIGIT) {
+        } else if (token.getTag() == Tag.DIGIT ||
+                token.getTag() == Tag.LITERAL) {
             constant();
-        }
-        if (token.getTag() == Tag.OPEN_PARENTHESES) {
+        } else if (token.getTag() == Tag.OPEN_PARENTHESES) {
             if (!eat(Tag.OPEN_PARENTHESES)) {
                 return false;
             }
             expression();
-            if (!eat(Tag.CLOSE_PARENTHESES)) {
-                return false;
-            }
+            return eat(Tag.CLOSE_PARENTHESES);
+        } else {
+            errorService.showError(lexer.line, "factor");
         }
         return true;
     }
@@ -477,6 +511,8 @@ public class ParserService {
             if (!eat(Tag.NE)) {
                 return false;
             }
+        } else {
+            errorService.showError(lexer.line, "relop");
         }
         return true;
     }
@@ -495,6 +531,8 @@ public class ParserService {
             if (!eat(Tag.OR)) {
                 return false;
             }
+        } else {
+            errorService.showError(lexer.line, "addop");
         }
         return true;
     }
@@ -513,6 +551,8 @@ public class ParserService {
             if (!eat(Tag.AND)) {
                 return false;
             }
+        } else {
+            errorService.showError(lexer.line, "mulop");
         }
         return true;
     }
@@ -527,34 +567,30 @@ public class ParserService {
         }
         if (token.getTag() == Tag.LITERAL) {
             literal();
+        } else {
+            errorService.showError(lexer.line, "constant");
         }
         return true;
     }
 
-    // verificar
+    // verificar - ok
     // integer_const ::= digit+
     public boolean integerConst() {
         if (token.getTag() == Tag.DIGIT) {
-            if (!eat(Tag.DIGIT)) {
-                return false;
-            }
+            return eat(Tag.DIGIT);
+        } else {
+            errorService.showError(lexer.line, "integer_const");
         }
         return true;
     }
 
-    // verificar
+    // verificar - ok
     // float_const ::= digit+“.”digit+
     public boolean floatConst() {
-        if (token.getTag() == Tag.DIGIT) {
-            if (!eat(Tag.DIGIT)) {
-                return false;
-            }
-            if (!eat(Tag.COMMA)) {
-                return false;
-            }
-            if (!eat(Tag.DIGIT)) {
-                return false;
-            }
+        if (token.getTag() == Tag.FLOAT_CONST) {
+            return eat(Tag.FLOAT_CONST);
+        } else {
+            errorService.showError(lexer.line, "float_const");
         }
         return true;
     }
@@ -562,42 +598,20 @@ public class ParserService {
     // literal ::= " { " {caractere} " } "
     public boolean literal() {
         if (token.getTag() == Tag.LITERAL) {
-            if (!eat(Tag.LITERAL)) {
-                return false;
-            }
+            return eat(Tag.LITERAL);
+        } else {
+            errorService.showError(lexer.line, "literal");
         }
         return true;
     }
 
-    // identifier ::= (letter | identifier’)
+    // identifier ::= (letter | _ ) (letter | digit )*
     public boolean identifier() {
-
-        return true;
-    }
-
-    // identifier’ ::= ( _ | digit )*
-    public boolean identifierPrime() {
-        return true;
-    }
-
-    // letter ::= [A-za-z]
-    public boolean letter() {
-        return true;
-    }
-
-    // digit ::= [0-9]
-    public boolean digit() {
-        if (token.getTag() == Tag.DIGIT) {
-            if (!eat(Tag.DIGIT)) {
-                return false;
-            }
+        if (token.getTag() == Tag.IDENTIFIER) {
+            return eat(Tag.IDENTIFIER);
+        } else {
+            errorService.showError(lexer.line, "identifier");
         }
         return true;
     }
-
-    // caractere ::= um dos caracteres ASCII, exceto quebra de linha
-    public boolean caractere() {
-        return true;
-    }
-
 }
