@@ -107,12 +107,12 @@ public class ParserService {
     public boolean identList() {
         if (token.getTag() == Tag.IDENTIFIER) {
             identifier();
-            do {
+            while (token.getTag() == Tag.COMMA) {
                 if (!eat(Tag.COMMA)) {
                     return false;
                 }
                 identifier();
-            } while (token.getTag() == Tag.COMMA);
+            }
         } else {
             errorService.showError(lexer.line, "ident-list");
         }
@@ -154,7 +154,8 @@ public class ParserService {
         return true;
     }
 
-    // stmt ::= assign-stmt ";" | if-stmt | while-stmt | read-stmt ";" | write-stmt ";"
+    // stmt ::= assign-stmt ";" | if-stmt | while-stmt | read-stmt ";" | write-stmt
+    // ";"
     public boolean stmt() {
         if (token.getTag() == Tag.IDENTIFIER) {
             assignStmt();
@@ -367,6 +368,8 @@ public class ParserService {
         if (token.getTag() == Tag.IDENTIFIER ||
                 token.getTag() == Tag.OPEN_PARENTHESES ||
                 token.getTag() == Tag.NOT ||
+                token.getTag() == Tag.DIGIT ||
+                token.getTag() == Tag.FLOAT_CONST ||
                 token.getTag() == Tag.MINUS) {
             term();
             simpleExprPrime();
@@ -385,12 +388,17 @@ public class ParserService {
             term();
             simpleExpr();
         } else if (token.getTag() == Tag.CLOSE_PARENTHESES ||
+                token.getTag() == Tag.DOT_COMMA ||
                 token.getTag() == Tag.THEN ||
                 token.getTag() == Tag.END ||
                 token.getTag() == Tag.GT ||
                 token.getTag() == Tag.EQ ||
-                token.getTag() == Tag.GE || token.getTag() == Tag.LT ||
-                token.getTag() == Tag.LE || token.getTag() == Tag.NOT) {
+                token.getTag() == Tag.GE ||
+                token.getTag() == Tag.LT ||
+                token.getTag() == Tag.LE ||
+                token.getTag() == Tag.DIGIT ||
+                token.getTag() == Tag.FLOAT_CONST ||
+                token.getTag() == Tag.NOT) {
         } else {
             errorService.showError(lexer.line, "simple-expr’​");
         }
@@ -404,6 +412,8 @@ public class ParserService {
         if (token.getTag() == Tag.IDENTIFIER ||
                 token.getTag() == Tag.OPEN_PARENTHESES ||
                 token.getTag() == Tag.NOT ||
+                token.getTag() == Tag.DIGIT ||
+                token.getTag() == Tag.FLOAT_CONST ||
                 token.getTag() == Tag.MINUS) {
             factorA();
             termPrime();
@@ -424,6 +434,7 @@ public class ParserService {
         } else if (token.getTag() == Tag.THEN ||
                 token.getTag() == Tag.END ||
                 token.getTag() == Tag.CLOSE_PARENTHESES ||
+                token.getTag() == Tag.DOT_COMMA ||
                 token.getTag() == Tag.MINUS ||
                 token.getTag() == Tag.EQ ||
                 token.getTag() == Tag.GT ||
@@ -444,10 +455,9 @@ public class ParserService {
     public boolean factorA() {
         if (token.getTag() == Tag.IDENTIFIER ||
                 token.getTag() == Tag.DIGIT ||
+                token.getTag() == Tag.FLOAT_CONST ||
                 token.getTag() == Tag.LITERAL ||
-                token.getTag() == Tag.OPEN_PARENTHESES ||
-                token.getTag() == Tag.NOT ||
-                token.getTag() == Tag.MINUS) {
+                token.getTag() == Tag.OPEN_PARENTHESES) {
             factor();
         } else if (token.getTag() == Tag.NOT) {
             if (!eat(Tag.NOT)) {
@@ -471,6 +481,7 @@ public class ParserService {
         if (token.getTag() == Tag.IDENTIFIER) {
             identifier();
         } else if (token.getTag() == Tag.DIGIT ||
+                token.getTag() == Tag.FLOAT_CONST ||
                 token.getTag() == Tag.LITERAL) {
             constant();
         } else if (token.getTag() == Tag.OPEN_PARENTHESES) {
@@ -561,11 +572,9 @@ public class ParserService {
     public boolean constant() {
         if (token.getTag() == Tag.DIGIT) {
             integerConst();
-        }
-        if (token.getTag() == Tag.FLOAT_CONST) {
+        } else if (token.getTag() == Tag.FLOAT_CONST) {
             floatConst();
-        }
-        if (token.getTag() == Tag.LITERAL) {
+        } else if (token.getTag() == Tag.LITERAL) {
             literal();
         } else {
             errorService.showError(lexer.line, "constant");

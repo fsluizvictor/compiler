@@ -24,28 +24,28 @@ public class Tag {
             COMMENT_BLOCK = 271, // "/**/"
 
             // SYMBOLS
-            OPEN_PARENTHESES = 272, // "("
-            CLOSE_PARENTHESES = 273, // ")"
-            DOT_COMMA = 274, // ";"
-            COMMA = 275, // ","
-            ASSIGN = 275, // "="
+            OPEN_PARENTHESES = 40, // "("
+            CLOSE_PARENTHESES = 41, // ")"
+            DOT_COMMA = 59, // ";"
+            COMMA = 44, // ","
+            ASSIGN = 61, // "="
 
             // MATH SYMBOLS
-            PLUS = 278, // "+"
-            MINUS = 279, // "-"
-            MULTIPLICATION = 280, // "*"
-            DIVISION = 281, // "/"
+            PLUS = 43, // "+"
+            MINUS = 45, // "-"
+            MULTIPLICATION = 42, // "*"
+            DIVISION = 47, // "/"
 
             // LOGIC SYMBOLS
             EQ = 282, // "==",
-            GT = 283, // ">",
+            GT = 62, // ">",
             GE = 284, // ">=",
-            LT = 285, // "<",
+            LT = 60, // "<",
             LE = 286, // "<=",
             //NE = 287, // "!=",
             OR = 288, // "||",
             AND = 289, // "&&",
-            NOT = 290, // "!",
+            NOT = 33, // "!",
             NE = 290, // "<>",
 
 
