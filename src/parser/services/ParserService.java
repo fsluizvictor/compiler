@@ -29,7 +29,7 @@ public class ParserService {
             if (token.getTag() == Tag.COMMENT_LINE || token.getTag() == Tag.COMMENT_BLOCK || token.tag == Tag.ERROR) {
                 advance();
             }
-
+            
             if (token.tag == Tag.EOF) {
                 eof = true;
             }
