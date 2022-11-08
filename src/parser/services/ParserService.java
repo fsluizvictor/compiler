@@ -8,7 +8,7 @@ public class ParserService {
 
     private final LexerService lexer;
     private Token token;
-    private boolean eof;
+    private boolean isEOF;    
     private ErrorService errorService;
 
     /**
@@ -18,7 +18,7 @@ public class ParserService {
     public ParserService(String filename) throws FileNotFoundException {
         lexer = new LexerService(filename);
         errorService = new ErrorService();
-        this.eof = false;
+        this.isEOF = false;
     }
 
     private void advance() {
@@ -29,9 +29,9 @@ public class ParserService {
             if (token.getTag() == Tag.COMMENT_LINE || token.getTag() == Tag.COMMENT_BLOCK || token.tag == Tag.ERROR) {
                 advance();
             }
-            
-            if (token.tag == Tag.EOF) {
-                eof = true;
+
+            if (lexer.isEOF) {
+                isEOF = lexer.isEOF;
             }
 
         } catch (Exception e) {
@@ -39,14 +39,16 @@ public class ParserService {
         }
     }
 
-    private boolean eat(int tag) {
-        if (token.getTag() != tag) {
-            return false;
-        }
-        // tags.add(tag);
-        advance();
-        return true;
+    public boolean isEOF() {
+        return isEOF;
+    }
 
+    private boolean eat(int tag) {
+        if (token.getTag() == tag) {
+            advance();
+            return true;
+        }
+        return false;
     }
 
     public void start() {
@@ -79,10 +81,14 @@ public class ParserService {
 
     // decl-list ::= decl {decl}
     public boolean declList() {
-        if (token.getTag() == Tag.INT || token.getTag() == Tag.STRING || token.getTag() == Tag.FLOAT) {
+        if (token.getTag() == Tag.INT ||
+                token.getTag() == Tag.STRING ||
+                token.getTag() == Tag.FLOAT) {
             do {
                 decl();
-            } while (token.getTag() == Tag.INT || token.getTag() == Tag.STRING || token.getTag() == Tag.FLOAT);
+            } while (token.getTag() == Tag.INT ||
+                    token.getTag() == Tag.STRING ||
+                    token.getTag() == Tag.FLOAT);
         } else {
             errorService.showError(lexer.line, "decl-list");
         }
@@ -92,7 +98,9 @@ public class ParserService {
 
     // decl ::= type ident-list ";"
     public boolean decl() {
-        if (token.getTag() == Tag.INT || token.getTag() == Tag.STRING || token.getTag() == Tag.FLOAT) {
+        if (token.getTag() == Tag.INT ||
+                token.getTag() == Tag.STRING ||
+                token.getTag() == Tag.FLOAT) {
             type();
             identList();
             return eat(Tag.DOT_COMMA);
@@ -168,7 +176,7 @@ public class ParserService {
             readStmt();
             return eat(Tag.DOT_COMMA);
         } else if (token.getTag() == Tag.PRINT) {
-            readStmt();
+            writeStmt();
             return eat(Tag.DOT_COMMA);
         } else {
             errorService.showError(lexer.line, "stmt");
@@ -238,6 +246,9 @@ public class ParserService {
                 token.getTag() == Tag.NOT ||
                 token.getTag() == Tag.MINUS ||
                 token.getTag() == Tag.PLUS ||
+                token.getTag() == Tag.DIGIT ||
+                token.getTag() == Tag.FLOAT_CONST ||
+                token.getTag() == Tag.LITERAL ||
                 token.getTag() == Tag.OR) {
             expression();
         } else {
@@ -268,9 +279,7 @@ public class ParserService {
                 return false;
             }
             condition();
-            if (!eat(Tag.END)) {
-                return false;
-            }
+            return eat(Tag.END);
         } else {
             errorService.showError(lexer.line, "stmt-sufix");
         }
@@ -304,9 +313,7 @@ public class ParserService {
                 return false;
             }
             writable();
-            if (!eat(Tag.CLOSE_PARENTHESES)) {
-                return false;
-            }
+            return eat(Tag.CLOSE_PARENTHESES);
         } else {
             errorService.showError(lexer.line, "write-stmt");
         }
@@ -316,6 +323,8 @@ public class ParserService {
     // writable ::= simple-expr | literal
     public boolean writable() {
         if (token.getTag() == Tag.IDENTIFIER ||
+                token.getTag() == Tag.DIGIT ||
+                token.getTag() == Tag.FLOAT_CONST ||
                 token.getTag() == Tag.OPEN_PARENTHESES ||
                 token.getTag() == Tag.NOT ||
                 token.getTag() == Tag.MINUS) {
@@ -331,6 +340,8 @@ public class ParserService {
     // expression​ ​::=​ ​simple-expr​ ​expression’
     public boolean expression() {
         if (token.getTag() == Tag.IDENTIFIER ||
+                token.getTag() == Tag.DIGIT ||
+                token.getTag() == Tag.FLOAT_CONST ||
                 token.getTag() == Tag.OPEN_PARENTHESES ||
                 token.getTag() == Tag.NOT ||
                 token.getTag() == Tag.OR ||
@@ -499,29 +510,17 @@ public class ParserService {
     // relop ::= "==" | ">" | ">=" | "<" | "<=" | "<>"
     public boolean relop() {
         if (token.getTag() == Tag.EQ) {
-            if (!eat(Tag.EQ)) {
-                return false;
-            }
+            return eat(Tag.EQ);
         } else if (token.getTag() == Tag.GT) {
-            if (!eat(Tag.GT)) {
-                return false;
-            }
+            return eat(Tag.GT);
         } else if (token.getTag() == Tag.GE) {
-            if (!eat(Tag.GE)) {
-                return false;
-            }
+            return eat(Tag.GE);
         } else if (token.getTag() == Tag.LT) {
-            if (!eat(Tag.LT)) {
-                return false;
-            }
+            return eat(Tag.LT);
         } else if (token.getTag() == Tag.LE) {
-            if (!eat(Tag.LE)) {
-                return false;
-            }
+            return eat(Tag.LE);
         } else if (token.getTag() == Tag.NE) {
-            if (!eat(Tag.NE)) {
-                return false;
-            }
+            return eat(Tag.NE);
         } else {
             errorService.showError(lexer.line, "relop");
         }
@@ -531,17 +530,11 @@ public class ParserService {
     // addop ::= "+" | "-" | "||"
     public boolean addop() {
         if (token.getTag() == Tag.PLUS) {
-            if (!eat(Tag.PLUS)) {
-                return false;
-            }
+            return eat(Tag.PLUS);
         } else if (token.getTag() == Tag.MINUS) {
-            if (!eat(Tag.MINUS)) {
-                return false;
-            }
+            return eat(Tag.MINUS);
         } else if (token.getTag() == Tag.OR) {
-            if (!eat(Tag.OR)) {
-                return false;
-            }
+            return eat(Tag.OR);
         } else {
             errorService.showError(lexer.line, "addop");
         }
@@ -551,17 +544,11 @@ public class ParserService {
     // mulop ::= "*" | "/" | "&&"
     public boolean mulop() {
         if (token.getTag() == Tag.MULTIPLICATION) {
-            if (!eat(Tag.MULTIPLICATION)) {
-                return false;
-            }
+            return eat(Tag.MULTIPLICATION);
         } else if (token.getTag() == Tag.DIVISION) {
-            if (!eat(Tag.DIVISION)) {
-                return false;
-            }
+            return eat(Tag.DIVISION);
         } else if (token.getTag() == Tag.AND) {
-            if (!eat(Tag.AND)) {
-                return false;
-            }
+            return eat(Tag.AND);
         } else {
             errorService.showError(lexer.line, "mulop");
         }

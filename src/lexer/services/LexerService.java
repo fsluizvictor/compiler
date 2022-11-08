@@ -17,6 +17,7 @@ import lexer.models.Word;
 public class LexerService {
 
     public static int line = 1; // contador de linhas
+    public boolean isEOF;
     private char ch = ' '; // caractere lido do arquivo
     private FileReader file;
 
@@ -80,49 +81,49 @@ public class LexerService {
                 break;
         }
 
-                // Recognize comments and math symbols
-                switch (ch) {
-                    case '/':
-                        if (readch('/')) {
-                            do {
-                                readch();
-                            } while (ch != '\n');
-                            line++;
-                            ch = ' ';
-                            return new Word("//", Tag.COMMENT_LINE);
-                        }
-                        if (ch == '*') {
-                            int tempLine = line;
-                            String error = "/*";
-                            do {
-                                readch();
-                                error += ch;
-                                if (ch == '\n')
-                                    line++;
-                                if (ch == '￿') {
-                                    Token invalidToken = new Error(tempLine, error);
-                                    tempLine++;
-                                    line = tempLine;
-                                    ch = ' ';
-                                    return invalidToken;
-                                }
-                            } while (ch != '*');
-                            if (readch('/'))
-                                return new Word("/**/", Tag.COMMENT_BLOCK);
-                        }
-                        return new Token('/');
-                    case '+':
-                        ch = ' ';
-                        return new Token('+');
-                    case '-':
-                        ch = ' ';
-                        return new Token('-');
-                    case '*':
-                        ch = ' ';
-                        return new Token('*');
-                    default:
-                        break;
+        // Recognize comments and math symbols
+        switch (ch) {
+            case '/':
+                if (readch('/')) {
+                    do {
+                        readch();
+                    } while (ch != '\n');
+                    line++;
+                    ch = ' ';
+                    return new Word("//", Tag.COMMENT_LINE);
                 }
+                if (ch == '*') {
+                    int tempLine = line;
+                    String error = "/*";
+                    do {
+                        readch();
+                        error += ch;
+                        if (ch == '\n')
+                            line++;
+                        if (ch == '￿') {
+                            Token invalidToken = new Error(tempLine, error);
+                            tempLine++;
+                            line = tempLine;
+                            ch = ' ';
+                            return invalidToken;
+                        }
+                    } while (ch != '*');
+                    if (readch('/'))
+                        return new Word("/**/", Tag.COMMENT_BLOCK);
+                }
+                return new Token('/');
+            case '+':
+                ch = ' ';
+                return new Token('+');
+            case '-':
+                ch = ' ';
+                return new Token('-');
+            case '*':
+                ch = ' ';
+                return new Token('*');
+            default:
+                break;
+        }
 
         switch (ch) {
             // Recognize LOGIC SYMBOLS
@@ -233,6 +234,7 @@ public class LexerService {
 
         if (ch == '￿') {
             Token eof = new EndOfFile(line, String.valueOf(ch));
+            setEOF(true);
             return eof;
         }
 
@@ -244,5 +246,13 @@ public class LexerService {
 
     public void showSymbolsTable() {
         words.values().forEach(word -> System.out.println(word));
+    }
+
+    public boolean isEOF() {
+        return isEOF;
+    }
+
+    public void setEOF(boolean isEOF) {
+        this.isEOF = isEOF;
     }
 }
