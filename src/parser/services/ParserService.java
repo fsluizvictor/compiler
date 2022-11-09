@@ -60,11 +60,6 @@ public class ParserService {
         program();
         System.out.println("Finalizando Análise Sintática ...");
 
-        // implementar a execução do program, de onde começam as funções de acordo com a
-        // tabela do Follow
-
-        // fim
-
     }
 
     // program ::= start [decl-list] stmt-list exit
