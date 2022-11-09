@@ -8,7 +8,7 @@ public class ParserService {
 
     private final LexerService lexer;
     private Token token;
-    private boolean isEOF;    
+    private boolean isEOF;
     private ErrorService errorService;
 
     /**
@@ -25,13 +25,12 @@ public class ParserService {
         try {
             // lê o arquivo
             token = lexer.scan();
+            if (token.getTag() == Tag.EOF) {
+                setEOF(true);
+            }
             // se o int do tokenen do scan for igual ao int da Tag
             if (token.getTag() == Tag.COMMENT_LINE || token.getTag() == Tag.COMMENT_BLOCK || token.tag == Tag.ERROR) {
                 advance();
-            }
-
-            if (lexer.isEOF) {
-                isEOF = lexer.isEOF;
             }
 
         } catch (Exception e) {
@@ -41,6 +40,10 @@ public class ParserService {
 
     public boolean isEOF() {
         return isEOF;
+    }
+
+    public void setEOF(boolean isEOF) {
+        this.isEOF = isEOF;
     }
 
     private boolean eat(int tag) {
@@ -67,6 +70,7 @@ public class ParserService {
     // program ::= start [decl-list] stmt-list exit
     public boolean program() {
         if (!eat(Tag.START)) {
+            errorService.showError(lexer.line, "program");
             return false;
         }
 
