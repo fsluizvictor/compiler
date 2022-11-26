@@ -3,6 +3,8 @@ package parser.services;
 import java.io.FileNotFoundException;
 import lexer.models.*;
 import lexer.services.*;
+import semantic.models.Node;
+import semantic.service.SemanticErrorService;
 
 public class ParserService {
 
@@ -10,6 +12,7 @@ public class ParserService {
     private Token token;
     private boolean isEOF;
     private ErrorService errorService;
+    private SemanticErrorService semanticErrorService;
 
     /**
      * @param filename
@@ -19,6 +22,7 @@ public class ParserService {
         lexer = new LexerService(filename);
         errorService = new ErrorService();
         this.isEOF = false;
+        semanticErrorService = new SemanticErrorService();
     }
 
     private void advance() {
@@ -46,6 +50,10 @@ public class ParserService {
         this.isEOF = isEOF;
     }
 
+    /**
+     * @param tag
+     * @return
+     */
     private boolean eat(int tag) {
         if (token.getTag() == tag) {
             advance();
@@ -63,10 +71,13 @@ public class ParserService {
     }
 
     // program ::= start [decl-list] stmt-list exit
-    public boolean program() {
+    public Node program() {
+
+        Node node = new Node();
+
         if (!eat(Tag.START)) {
             errorService.showError(lexer.line, "program");
-            return false;
+            return node;
         }
 
         if (token.getTag() == Tag.INT || token.getTag() == Tag.STRING || token.getTag() == Tag.FLOAT) {
@@ -75,11 +86,12 @@ public class ParserService {
 
         stmtList();
 
-        return eat(Tag.EXIT);
+        return node;
     }
 
     // decl-list ::= decl {decl}
-    public boolean declList() {
+    public Node declList() {
+        Node node = new Node();
         if (token.getTag() == Tag.INT ||
                 token.getTag() == Tag.STRING ||
                 token.getTag() == Tag.FLOAT) {
@@ -92,57 +104,72 @@ public class ParserService {
             errorService.showError(lexer.line, "decl-list");
         }
 
-        return true;
+        return node;
     }
 
     // decl ::= type ident-list ";"
-    public boolean decl() {
+    public Node decl() {
+        Node node = new Node();
         if (token.getTag() == Tag.INT ||
                 token.getTag() == Tag.STRING ||
                 token.getTag() == Tag.FLOAT) {
-            type();
-            identList();
-            return eat(Tag.DOT_COMMA);
+            node.setType(type().getType());
+            identList(node.getType());
+            if (!eat(Tag.DOT_COMMA)) {
+                return node;
+            }
         } else {
             errorService.showError(lexer.line, "decl");
         }
 
-        return true;
+        return node;
     }
 
     // ident-list ::= identifier {"," identifier}
-    public boolean identList() {
+    public Node identList(int type) {
+        Node node = new Node();
         if (token.getTag() == Tag.IDENTIFIER) {
-            identifier();
+            identifier(type);
             while (token.getTag() == Tag.COMMA) {
                 if (!eat(Tag.COMMA)) {
-                    return false;
+                    return node;
                 }
-                identifier();
+                identifier(type);
             }
         } else {
             errorService.showError(lexer.line, "ident-list");
         }
 
-        return true;
+        return node;
     }
 
     // type ::= int | float | string
-    public boolean type() {
+    public Node type() {
+        Node node = new Node();
         if (token.getTag() == Tag.INT) {
-            return eat(Tag.INT);
+            if (!eat(Tag.INT)) {
+                return node;
+            }
+            node.setType(Tag.INT);
         } else if (token.getTag() == Tag.STRING) {
-            return eat(Tag.STRING);
+            if (!eat(Tag.STRING)) {
+                return node;
+            }
+            node.setType(Tag.STRING);
         } else if (token.getTag() == Tag.FLOAT) {
-            return eat(Tag.FLOAT);
+            if (!eat(Tag.FLOAT)) {
+                return node;
+            }
+            node.setType(Tag.FLOAT);
         } else {
             errorService.showError(lexer.line, "type");
         }
-        return true;
+        return node;
     }
 
     // stmt-list ::= stmt {stmt}
-    public boolean stmtList() {
+    public Node stmtList() {
+        Node node = new Node();
         if (token.getTag() == Tag.IDENTIFIER ||
                 token.getTag() == Tag.IF ||
                 token.getTag() == Tag.DO ||
@@ -158,88 +185,106 @@ public class ParserService {
         } else {
             errorService.showError(lexer.line, "stmt-list");
         }
-        return true;
+        return node;
     }
 
     // stmt ::= assign-stmt ";" | if-stmt | while-stmt | read-stmt ";" | write-stmt
     // ";"
-    public boolean stmt() {
+    public Node stmt() {
+        Node node = new Node();
         if (token.getTag() == Tag.IDENTIFIER) {
             assignStmt();
-            return eat(Tag.DOT_COMMA);
+            if (!eat(Tag.DOT_COMMA)) {
+                return node;
+            }
         } else if (token.getTag() == Tag.IF) {
             ifStmt();
         } else if (token.getTag() == Tag.WHILE) {
             whileStmt();
         } else if (token.getTag() == Tag.SCAN) {
             readStmt();
-            return eat(Tag.DOT_COMMA);
+            if (!eat(Tag.DOT_COMMA)) {
+                return node;
+            }
         } else if (token.getTag() == Tag.PRINT) {
             writeStmt();
-            return eat(Tag.DOT_COMMA);
+            if (!eat(Tag.DOT_COMMA)) {
+                return node;
+            }
         } else {
             errorService.showError(lexer.line, "stmt");
         }
-        return true;
+        return node;
     }
 
     // assign-stmt ::= identifier "=" simple_expr
-    public boolean assignStmt() {
+    public Node assignStmt() {
+        Node node = new Node();
+        int aux;
         if (token.getTag() == Tag.IDENTIFIER) {
-            identifier();
+
+            node.setType(identifier(Tag.VOID_SEMANTIC_TAG).getType());
+
             if (!eat(Tag.ASSIGN)) {
-                return false;
+                return node;
             }
-            simpleExpr();
+            aux = simpleExpr().getType();
+            if (aux != node.type) {
+                semanticErrorService.unexpectedTagError(node.getType(), aux);
+                node.setType(node.getType());
+            }
         } else {
             errorService.showError(lexer.line, "assign-stmt");
         }
-        return true;
+        return node;
     }
 
     // if-stmt​ ​::=​ ​if​ ​condition​ ​then​ ​stmt-list​ ​if-stmt’
-    public boolean ifStmt() {
+    public Node ifStmt() {
+        Node node = new Node();
         if (token.getTag() == Tag.IF) {
             if (!eat(Tag.IF)) {
-                return false;
+                return node;
             }
             condition();
             if (!eat(Tag.THEN)) {
-                return false;
+                return node;
             }
             stmtList();
             ifStmtPrime();
         } else {
             errorService.showError(lexer.line, "if-stmt");
         }
-        return true;
+        return node;
     }
 
     // if-stmt’​ ​::=​ ​end​ ​|​ ​else​ ​stmt-list​ ​end
-    public boolean ifStmtPrime() {
+    public Node ifStmtPrime() {
+        Node node = new Node();
         if (token.getTag() == Tag.END) {
             if (!eat(Tag.END)) {
-                return false;
+                return node;
             }
         } else if (token.getTag() == Tag.ELSE) {
             if (!eat(Tag.ELSE)) {
-                return false;
+                return node;
             }
             stmtList();
             if (token.getTag() == Tag.END) {
                 if (!eat(Tag.END)) {
-                    return false;
+                    return node;
                 }
             }
         } else {
             errorService.showError(lexer.line, "if-stmt'");
         }
 
-        return true;
+        return node;
     }
 
     // condition ::= expression
-    public boolean condition() {
+    public Node condition() {
+        Node node = new Node();
         if (token.getTag() == Tag.IDENTIFIER ||
                 token.getTag() == Tag.OPEN_PARENTHESES ||
                 token.getTag() == Tag.NOT ||
@@ -254,90 +299,110 @@ public class ParserService {
             errorService.showError(lexer.line, "condition");
         }
 
-        return true;
+        return node;
     }
 
     // while-stmt ::= do stmt-list stmt-sufix
-    public boolean whileStmt() {
+    public Node whileStmt() {
+        Node node = new Node();
         if (token.getTag() == Tag.DO) {
             if (!eat(Tag.DO)) {
-                return false;
+                return node;
             }
             stmtList();
             stmtSufix();
         } else {
             errorService.showError(lexer.line, "while-stmt");
         }
-        return true;
+        return node;
     }
 
     // stmt-sufix ::= while condition end
-    public boolean stmtSufix() {
+    public Node stmtSufix() {
+        Node node = new Node();
         if (token.getTag() == Tag.WHILE) {
             if (!eat(Tag.WHILE)) {
-                return false;
+                return node;
             }
             condition();
-            return eat(Tag.END);
+            if (!eat(Tag.END)) {
+                return node;
+            }
         } else {
             errorService.showError(lexer.line, "stmt-sufix");
         }
-        return true;
+        return node;
     }
 
     // read-stmt ::= scan "(" identifier ")"
-    public boolean readStmt() {
+    public Node readStmt() {
+        Node node = new Node();
         if (token.getTag() == Tag.SCAN) {
             if (!eat(Tag.SCAN)) {
-                return false;
+                return node;
             }
             if (!eat(Tag.OPEN_PARENTHESES)) {
-                return false;
+                return node;
             }
-            identifier();
-            return eat(Tag.CLOSE_PARENTHESES);
+
+            node.setType(identifier(Tag.VOID_SEMANTIC_TAG).getType());
+
+            if (!eat(Tag.CLOSE_PARENTHESES)) {
+                return node;
+            }
         } else {
             errorService.showError(lexer.line, "read-stmt");
         }
-        return true;
+        return node;
     }
 
     // write-stmt ::= print "(" writable ")"
-    public boolean writeStmt() {
+    public Node writeStmt() {
+        Node node = new Node();
         if (token.getTag() == Tag.PRINT) {
             if (!eat(Tag.PRINT)) {
-                return false;
+                return node;
             }
             if (!eat(Tag.OPEN_PARENTHESES)) {
-                return false;
+                return node;
             }
-            writable();
-            return eat(Tag.CLOSE_PARENTHESES);
+
+            node.setType(writable().getType());
+
+            if (!eat(Tag.CLOSE_PARENTHESES)) {
+                return node;
+            }
         } else {
             errorService.showError(lexer.line, "write-stmt");
         }
-        return true;
+        return node;
     }
 
     // writable ::= simple-expr | literal
-    public boolean writable() {
+    public Node writable() {
+        Node node = new Node();
         if (token.getTag() == Tag.IDENTIFIER ||
                 token.getTag() == Tag.DIGIT ||
                 token.getTag() == Tag.FLOAT_CONST ||
                 token.getTag() == Tag.OPEN_PARENTHESES ||
                 token.getTag() == Tag.NOT ||
                 token.getTag() == Tag.MINUS) {
-            simpleExpr();
+
+            node.setType(simpleExpr().getType());
+
         } else if (token.getTag() == Tag.LITERAL) {
-            literal();
+
+            node.setType(literal().getType());
+
         } else {
             errorService.showError(lexer.line, "writable");
         }
-        return true;
+        return node;
     }
 
     // expression​ ​::=​ ​simple-expr​ ​expression’
-    public boolean expression() {
+    public Node expression() {
+        Node node = new Node();
         if (token.getTag() == Tag.IDENTIFIER ||
                 token.getTag() == Tag.DIGIT ||
                 token.getTag() == Tag.FLOAT_CONST ||
@@ -345,16 +410,17 @@ public class ParserService {
                 token.getTag() == Tag.NOT ||
                 token.getTag() == Tag.OR ||
                 token.getTag() == Tag.MINUS) {
-            simpleExpr();
-            expressionPrime();
+            node.setType(simpleExpr().getType());
+            expressionPrime(node.getType());
         } else {
             errorService.showError(lexer.line, "expression​");
         }
-        return true;
+        return node;
     }
 
     // expression’​ ​::=​ ​ ​relop​ ​simple-expr​ ​|​ ​𝛌
-    public boolean expressionPrime() {
+    public Node expressionPrime(int type) {
+        Node node = new Node();
         if (token.getTag() == Tag.GT ||
                 token.getTag() == Tag.EQ ||
                 token.getTag() == Tag.GE ||
@@ -362,7 +428,13 @@ public class ParserService {
                 token.getTag() == Tag.LE ||
                 token.getTag() == Tag.NOT) {
             relop();
-            simpleExpr();
+            node.setType(simpleExpr().getType());
+
+            if (node.getType() != type) {
+                semanticErrorService.unexpectedTagError(type, node.getType());
+                node.setType(type);
+            }
+
         } else if (token.getTag() == Tag.THEN ||
                 token.getTag() == Tag.END ||
                 token.getTag() == Tag.CLOSE_PARENTHESES) {
@@ -370,30 +442,36 @@ public class ParserService {
         } else {
             errorService.showError(lexer.line, "expression'");
         }
-        return true;
+        return node;
     }
 
     // simple-expr​ ​::=​ ​term​ ​simple-expr’
-    public boolean simpleExpr() {
+    public Node simpleExpr() {
+        Node node = new Node();
         if (token.getTag() == Tag.IDENTIFIER ||
                 token.getTag() == Tag.OPEN_PARENTHESES ||
                 token.getTag() == Tag.NOT ||
                 token.getTag() == Tag.DIGIT ||
                 token.getTag() == Tag.FLOAT_CONST ||
                 token.getTag() == Tag.MINUS) {
-            term();
-            simpleExprPrime();
+            node.setType(term().getType());
+            simpleExprPrime(node.getType());
         } else {
             errorService.showError(lexer.line, "simple-expr​");
         }
-        return true;
+        return node;
     }
 
+    // TODO: add a semantic validation
     // simple-expr’​ ​::=​ ​addop​ ​term​ ​simple-expr’​ ​|​ ​𝛌
-    public boolean simpleExprPrime() {
+    public Node simpleExprPrime(int type) {
+        Node node = new Node();
         if (token.getTag() == Tag.PLUS ||
                 token.getTag() == Tag.MINUS ||
                 token.getTag() == Tag.OR) {
+
+            // TODO: add a semantic validation
+
             addop();
             term();
             simpleExpr();
@@ -413,28 +491,30 @@ public class ParserService {
             errorService.showError(lexer.line, "simple-expr’​");
         }
 
-        return true;
+        return node;
     }
 
-    // VERIFICAR == ok
     // term​ ​::=​ ​factor-a​ ​term’
-    public boolean term() {
+    public Node term() {
+        Node node = new Node();
         if (token.getTag() == Tag.IDENTIFIER ||
                 token.getTag() == Tag.OPEN_PARENTHESES ||
                 token.getTag() == Tag.NOT ||
                 token.getTag() == Tag.DIGIT ||
                 token.getTag() == Tag.FLOAT_CONST ||
                 token.getTag() == Tag.MINUS) {
-            factorA();
+            node.setType(factorA().getType());
             termPrime();
         } else {
             errorService.showError(lexer.line, "term");
         }
-        return true;
+        return node;
     }
 
+    //TODO : add a semantic validation
     // term’​ ​::=​ ​mulop​ ​factor-a​ ​term’​ ​|​ ​𝛌
-    public boolean termPrime() {
+    public Node termPrime() {
+        Node node = new Node();
         if (token.getTag() == Tag.MULTIPLICATION ||
                 token.getTag() == Tag.DIVISION ||
                 token.getTag() == Tag.AND) {
@@ -457,156 +537,204 @@ public class ParserService {
         } else {
             errorService.showError(lexer.line, "term’");
         }
-        return true;
+        return node;
     }
 
     // Verificar = ok
     // fator-a ::= factor | "!" factor | "-" factor
-    public boolean factorA() {
+    public Node factorA() {
+        Node node = new Node();
         if (token.getTag() == Tag.IDENTIFIER ||
                 token.getTag() == Tag.DIGIT ||
                 token.getTag() == Tag.FLOAT_CONST ||
                 token.getTag() == Tag.LITERAL ||
                 token.getTag() == Tag.OPEN_PARENTHESES) {
-            factor();
+            node.setType(factor().getType()); 
         } else if (token.getTag() == Tag.NOT) {
             if (!eat(Tag.NOT)) {
-                return false;
+                return node;
             }
-            factor();
+            node.setType(factor().getType()); 
         } else if (token.getTag() == Tag.MINUS) {
             if (!eat(Tag.MINUS)) {
-                return false;
+                return node;
             }
-            factor();
+            node.setType(factor().getType()); 
         } else {
             errorService.showError(lexer.line, "fator-a");
         }
-        return true;
+        return node;
     }
 
     // verificar - ok
     // factor ::= identifier | constant | "(" expression ")"
-    public boolean factor() {
+    public Node factor() {
+        Node node = new Node();
         if (token.getTag() == Tag.IDENTIFIER) {
-            identifier();
+            node.setType(identifier(Tag.VOID_SEMANTIC_TAG).getType()); 
         } else if (token.getTag() == Tag.DIGIT ||
                 token.getTag() == Tag.FLOAT_CONST ||
                 token.getTag() == Tag.LITERAL) {
-            constant();
+            node.setType(constant().getType()); 
         } else if (token.getTag() == Tag.OPEN_PARENTHESES) {
             if (!eat(Tag.OPEN_PARENTHESES)) {
-                return false;
+                return node;
             }
-            expression();
-            return eat(Tag.CLOSE_PARENTHESES);
+            node.setType(expression().getType()); 
+            if(!eat(Tag.CLOSE_PARENTHESES)){
+                return node;
+            }
         } else {
             errorService.showError(lexer.line, "factor");
         }
-        return true;
+        return node;
     }
 
     // relop ::= "==" | ">" | ">=" | "<" | "<=" | "<>"
-    public boolean relop() {
+    public Node relop() {
+        Node node = new Node();
         if (token.getTag() == Tag.EQ) {
-            return eat(Tag.EQ);
+            if (!eat(Tag.EQ)) {
+                return node;
+            }
         } else if (token.getTag() == Tag.GT) {
-            return eat(Tag.GT);
+            if (!eat(Tag.GT)) {
+                return node;
+            }
         } else if (token.getTag() == Tag.GE) {
-            return eat(Tag.GE);
+            if (!eat(Tag.GE)) {
+                return node;
+            }
         } else if (token.getTag() == Tag.LT) {
-            return eat(Tag.LT);
+            if (!eat(Tag.LT)) {
+                return node;
+            }
         } else if (token.getTag() == Tag.LE) {
-            return eat(Tag.LE);
+            if (!eat(Tag.LE)) {
+                return node;
+            }
         } else if (token.getTag() == Tag.NE) {
-            return eat(Tag.NE);
+            if (!eat(Tag.NE)) {
+                return node;
+            }
         } else {
             errorService.showError(lexer.line, "relop");
         }
-        return true;
+        return node;
     }
 
     // addop ::= "+" | "-" | "||"
-    public boolean addop() {
+    public Node addop() {
+        Node node = new Node();
         if (token.getTag() == Tag.PLUS) {
-            return eat(Tag.PLUS);
+            if (!eat(Tag.PLUS)) {
+                return node;
+            }
         } else if (token.getTag() == Tag.MINUS) {
-            return eat(Tag.MINUS);
+            if (!eat(Tag.MINUS)) {
+                return node;
+            }
         } else if (token.getTag() == Tag.OR) {
-            return eat(Tag.OR);
+            if (!eat(Tag.OR)) {
+                return node;
+            }
         } else {
             errorService.showError(lexer.line, "addop");
         }
-        return true;
+        return node;
     }
 
     // mulop ::= "*" | "/" | "&&"
-    public boolean mulop() {
+    public Node mulop() {
+        Node node = new Node();
         if (token.getTag() == Tag.MULTIPLICATION) {
-            return eat(Tag.MULTIPLICATION);
+            if (!eat(Tag.MULTIPLICATION)) {
+                return node;
+            }
         } else if (token.getTag() == Tag.DIVISION) {
-            return eat(Tag.DIVISION);
+            if (!eat(Tag.DIVISION)) {
+                return node;
+            }
         } else if (token.getTag() == Tag.AND) {
-            return eat(Tag.AND);
+            if (!eat(Tag.AND)) {
+                return node;
+            }
         } else {
             errorService.showError(lexer.line, "mulop");
         }
-        return true;
+        return node;
     }
 
     // constant ::= integer_const | float_const | literal
-    public boolean constant() {
+    public Node constant() {
+        Node node = new Node();
         if (token.getTag() == Tag.DIGIT) {
-            integerConst();
+            node.setType(integerConst().getType());
         } else if (token.getTag() == Tag.FLOAT_CONST) {
-            floatConst();
+            node.setType(floatConst().getType());
         } else if (token.getTag() == Tag.LITERAL) {
-            literal();
+            node.setType(literal().getType());
         } else {
             errorService.showError(lexer.line, "constant");
         }
-        return true;
+        return node;
     }
 
     // verificar - ok
     // integer_const ::= digit+
-    public boolean integerConst() {
+    public Node integerConst() {
+        Node node = new Node();
         if (token.getTag() == Tag.DIGIT) {
-            return eat(Tag.DIGIT);
+            if (!eat(Tag.DIGIT)) {
+                return node;
+            }
+            node.setType(Tag.DIGIT);
         } else {
             errorService.showError(lexer.line, "integer_const");
         }
-        return true;
+        return node;
     }
 
     // verificar - ok
     // float_const ::= digit+“.”digit+
-    public boolean floatConst() {
+    public Node floatConst() {
+        Node node = new Node();
         if (token.getTag() == Tag.FLOAT_CONST) {
-            return eat(Tag.FLOAT_CONST);
+            if (!eat(Tag.FLOAT_CONST)) {
+                return node;
+            }
+            node.setType(Tag.FLOAT_CONST);
         } else {
             errorService.showError(lexer.line, "float_const");
         }
-        return true;
+        return node;
     }
 
     // literal ::= " { " {caractere} " } "
-    public boolean literal() {
+    public Node literal() {
+        Node node = new Node();
         if (token.getTag() == Tag.LITERAL) {
-            return eat(Tag.LITERAL);
+            if (!eat(Tag.LITERAL)) {
+                return node;
+            }
+            node.setType(Tag.LITERAL);
         } else {
             errorService.showError(lexer.line, "literal");
         }
-        return true;
+        return node;
     }
 
+    // TODO: add a semantic validation
     // identifier ::= (letter | _ ) (letter | digit )*
-    public boolean identifier() {
+    public Node identifier(int type) {
+        Node node = new Node();
         if (token.getTag() == Tag.IDENTIFIER) {
-            return eat(Tag.IDENTIFIER);
+            if (!eat(Tag.IDENTIFIER)) {
+                return node;
+            }
         } else {
             errorService.showError(lexer.line, "identifier");
         }
-        return true;
+        return node;
     }
 }
