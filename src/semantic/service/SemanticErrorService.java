@@ -9,7 +9,7 @@ public class SemanticErrorService {
 
     }
 
-    public void variableNotDeclaredError() {
-
+    public void variableNotDeclaredError(String lexeme) {
+        System.out.println("Variável não declarada : " + lexeme);
     }
 }

@@ -1,9 +1,12 @@
 package parser.services;
 
 import java.io.FileNotFoundException;
+import java.util.Hashtable;
+
 import lexer.models.*;
 import lexer.services.*;
 import semantic.models.Node;
+import semantic.models.SymbolTableElement;
 import semantic.service.SemanticErrorService;
 
 public class ParserService {
@@ -29,6 +32,7 @@ public class ParserService {
         try {
             // lê o arquivo
             token = lexer.scan();
+            System.out.println(token);
             if (token.getTag() == Tag.EOF) {
                 setEOF(true);
             }
@@ -85,6 +89,10 @@ public class ParserService {
         }
 
         stmtList();
+
+        if(!eat(Tag.EXIT)){
+            return node;
+        }
 
         return node;
     }
@@ -228,6 +236,8 @@ public class ParserService {
             if (!eat(Tag.ASSIGN)) {
                 return node;
             }
+
+            // check if is the same type both values to expression
             aux = simpleExpr().getType();
             if (aux != node.type) {
                 semanticErrorService.unexpectedTagError(node.getType(), aux);
@@ -470,11 +480,19 @@ public class ParserService {
                 token.getTag() == Tag.MINUS ||
                 token.getTag() == Tag.OR) {
 
-            // TODO: add a semantic validation
-
             addop();
-            term();
-            simpleExpr();
+
+            node.setType(term().getType());
+
+            // check the correct types of elements
+            if (node.getType() != Tag.INT ||
+                    node.getType() != Tag.FLOAT ||
+                    node.getType() != Tag.STRING) {
+                semanticErrorService.unexpectedTagError(type, node.getType());
+                node.setType(type);
+            }
+
+            simpleExprPrime(node.getType());
         } else if (token.getTag() == Tag.CLOSE_PARENTHESES ||
                 token.getTag() == Tag.DOT_COMMA ||
                 token.getTag() == Tag.THEN ||
@@ -511,15 +529,26 @@ public class ParserService {
         return node;
     }
 
-    //TODO : add a semantic validation
+    // TODO : add a semantic validation
     // term’​ ​::=​ ​mulop​ ​factor-a​ ​term’​ ​|​ ​𝛌
     public Node termPrime() {
         Node node = new Node();
         if (token.getTag() == Tag.MULTIPLICATION ||
                 token.getTag() == Tag.DIVISION ||
                 token.getTag() == Tag.AND) {
+
             mulop();
-            factorA();
+
+            node.setType(factorA().getType());
+
+            if (node.getType() != Tag.INT ||
+                    node.getType() != Tag.FLOAT ||
+                    node.getType() != Tag.STRING) {
+                semanticErrorService.unexpectedTagError(Tag.INT, node.getType());
+                semanticErrorService.unexpectedTagError(Tag.FLOAT, node.getType());
+                semanticErrorService.unexpectedTagError(Tag.STRING, node.getType());
+            }
+
             termPrime();
         } else if (token.getTag() == Tag.THEN ||
                 token.getTag() == Tag.END ||
@@ -549,17 +578,17 @@ public class ParserService {
                 token.getTag() == Tag.FLOAT_CONST ||
                 token.getTag() == Tag.LITERAL ||
                 token.getTag() == Tag.OPEN_PARENTHESES) {
-            node.setType(factor().getType()); 
+            node.setType(factor().getType());
         } else if (token.getTag() == Tag.NOT) {
             if (!eat(Tag.NOT)) {
                 return node;
             }
-            node.setType(factor().getType()); 
+            node.setType(factor().getType());
         } else if (token.getTag() == Tag.MINUS) {
             if (!eat(Tag.MINUS)) {
                 return node;
             }
-            node.setType(factor().getType()); 
+            node.setType(factor().getType());
         } else {
             errorService.showError(lexer.line, "fator-a");
         }
@@ -571,17 +600,17 @@ public class ParserService {
     public Node factor() {
         Node node = new Node();
         if (token.getTag() == Tag.IDENTIFIER) {
-            node.setType(identifier(Tag.VOID_SEMANTIC_TAG).getType()); 
+            node.setType(identifier(Tag.VOID_SEMANTIC_TAG).getType());
         } else if (token.getTag() == Tag.DIGIT ||
                 token.getTag() == Tag.FLOAT_CONST ||
                 token.getTag() == Tag.LITERAL) {
-            node.setType(constant().getType()); 
+            node.setType(constant().getType());
         } else if (token.getTag() == Tag.OPEN_PARENTHESES) {
             if (!eat(Tag.OPEN_PARENTHESES)) {
                 return node;
             }
-            node.setType(expression().getType()); 
-            if(!eat(Tag.CLOSE_PARENTHESES)){
+            node.setType(expression().getType());
+            if (!eat(Tag.CLOSE_PARENTHESES)) {
                 return node;
             }
         } else {
@@ -728,10 +757,35 @@ public class ParserService {
     // identifier ::= (letter | _ ) (letter | digit )*
     public Node identifier(int type) {
         Node node = new Node();
+
+        // check the uniqueness of each variable name
+        Hashtable<String, SymbolTableElement> sybleTable = lexer.getWords();
+
         if (token.getTag() == Tag.IDENTIFIER) {
             if (!eat(Tag.IDENTIFIER)) {
                 return node;
             }
+
+            SymbolTableElement element = sybleTable.get(token.getLexeme());
+
+            if (!element.equals(null)) {
+                if (type == Tag.VOID_SEMANTIC_TAG) {
+                    if (element.getType() == Tag.VOID_SEMANTIC_TAG) {
+                        semanticErrorService.variableNotDeclaredError(element.getWord().getLexeme());
+                    } else {
+                        node.setType(element.getType());
+                    }
+                } else {
+                    node.type = type;
+                    if(element.getType() == Tag.VOID_SEMANTIC_TAG ){
+                        element.setType(type);
+                        lexer.setWords(sybleTable);
+                    }else{
+                        semanticErrorService.variableAlreadyDeclaredError();
+                    }
+                }
+            }
+
         } else {
             errorService.showError(lexer.line, "identifier");
         }

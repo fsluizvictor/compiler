@@ -13,6 +13,7 @@ import lexer.models.Literal;
 import lexer.models.Tag;
 import lexer.models.Token;
 import lexer.models.Word;
+import semantic.models.SymbolTableElement;
 
 public class LexerService {
 
@@ -21,7 +22,7 @@ public class LexerService {
     private char ch = ' '; // caractere lido do arquivo
     private FileReader file;
 
-    private Hashtable words = new Hashtable();
+    private Hashtable<String, SymbolTableElement> words = new Hashtable<String, SymbolTableElement>();
 
     public LexerService() {
     }
@@ -36,7 +37,8 @@ public class LexerService {
     }
 
     private void reserve(Word word) {
-        words.put(word.getLexeme(), word);
+        SymbolTableElement element = new SymbolTableElement(word, Tag.VOID_SEMANTIC_TAG);
+        words.put(word.getLexeme(), element);
     }
 
     private void keepAllReservedWords() {
@@ -213,12 +215,14 @@ public class LexerService {
                 readch();
             } while (Character.isLetterOrDigit(ch) || Character.compare(ch, '_') == 0);
             String s = sb.toString();
-            Word w = (Word) words.get(s);
-            if (w != null)
-                return w; // palavra já existe na HashTable
-            w = new Word(s, Tag.IDENTIFIER);
-            words.put(s, w);
-            return w;
+            SymbolTableElement symbolTableElement = (SymbolTableElement) words.get(s);
+            if (symbolTableElement != null) {
+                return symbolTableElement.getWord(); // palavra já existe na HashTable
+            }
+            SymbolTableElement newSymbolTableElement = new SymbolTableElement(new Word(s, Tag.IDENTIFIER),
+                    Tag.VOID_SEMANTIC_TAG);
+            words.put(s, newSymbolTableElement);
+            return newSymbolTableElement.getWord();
         }
 
         // Literal
@@ -246,6 +250,14 @@ public class LexerService {
 
     public void showSymbolsTable() {
         words.values().forEach(word -> System.out.println(word));
+    }
+
+    public Hashtable<String, SymbolTableElement> getWords() {
+        return words;
+    }
+
+    public void setWords(Hashtable<String, SymbolTableElement> words) {
+        this.words = words;
     }
 
     public boolean isEOF() {

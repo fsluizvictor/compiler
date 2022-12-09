@@ -16,6 +16,7 @@ public class Word extends Token {
         this.lexeme = lexeme;
     }
 
+    @Override
     public String getLexeme() {
         return lexeme;
     }
