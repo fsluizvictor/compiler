@@ -71,7 +71,7 @@ public class ParserService {
 
         if (!eat(Tag.START)) {
             errorService.showError(lexer.line, "program");
-            return node;
+            //return node;
         }
 
         if (token.getTag() == Tag.INT || token.getTag() == Tag.STRING || token.getTag() == Tag.FLOAT) {
@@ -90,13 +90,15 @@ public class ParserService {
     // decl-list ::= decl {decl}
     public Node declList() {
         Node node = new Node();
-        if (token.getTag() == Tag.INT ||
-                token.getTag() == Tag.STRING ||
-                token.getTag() == Tag.FLOAT) {
+        if (token.getTag() == Tag.INT
+                || token.getTag() == Tag.STRING
+                || token.getTag() == Tag.FLOAT) {
+            // System.out.println("decl 1 -declList");
             decl();
-            while (token.getTag() == Tag.INT ||
-                    token.getTag() == Tag.STRING ||
-                    token.getTag() == Tag.FLOAT) {
+            while (token.getTag() == Tag.INT
+                    || token.getTag() == Tag.STRING
+                    || token.getTag() == Tag.FLOAT) {
+                // System.out.println("decl 2 -declList");
                 decl();
             }
         } else {
@@ -166,29 +168,54 @@ public class ParserService {
         return node;
     }
 
-    // stmt-list ::= stmt {stmt}
-    public Node stmtList() {
-        Node node = new Node();
-        if (token.getTag() == Tag.IDENTIFIER ||
-                token.getTag() == Tag.IF ||
-                token.getTag() == Tag.DO ||
-                token.getTag() == Tag.SCAN ||
-                token.getTag() == Tag.PRINT) {
-            stmt();
-            while (token.getTag() == Tag.IDENTIFIER ||
-                    token.getTag() == Tag.IF ||
-                    token.getTag() == Tag.DO ||
-                    token.getTag() == Tag.SCAN ||
-                    token.getTag() == Tag.PRINT) {
-                stmt();
-            }
-        } else {
-            errorService.showError(lexer.line, "stmt-list");
-        }
-        return node;
-    }
+   // stmt-list ::= stmt {stmt}
+   public Node stmtList() {
+    Node node = new Node();
+    if (token.getTag() == Tag.IDENTIFIER
+            || token.getTag() == Tag.IF
+            || token.getTag() == Tag.DO
+            || token.getTag() == Tag.SCAN
+            || token.getTag() == Tag.PRINT
+            || token.getTag() == Tag.UNDERSCORE) {
+        // System.out.println("stmt1ª-stmtList");
+        stmt();
+        while (token.getTag() == Tag.IDENTIFIER
+                || token.getTag() == Tag.IF
+                || token.getTag() == Tag.DO
+                || token.getTag() == Tag.SCAN
+                || token.getTag() == Tag.PRINT
+                || token.getTag() == Tag.UNDERSCORE) {
+            // System.out.println("stmt2ª-stmtList\t" + token.toString());
 
-    // stmt ::= assign-stmt ";" | if-stmt | while-stmt | read-stmt ";" | write-stmt
+            if (token.getTag() == Tag.IDENTIFIER
+                    || token.getTag() == Tag.IF
+                    || token.getTag() == Tag.DO
+                    || token.getTag() == Tag.SCAN
+                    || token.getTag() == Tag.PRINT
+                    || token.getTag() == Tag.UNDERSCORE) {
+                // System.out.println("ENTRADA STMT "+token.toString());
+                stmt();
+
+                // System.out.println("SAIDA STMT "+token.toString());
+            } else {
+                if (token.getTag() == Tag.EXIT
+                        && token.getTag() == Tag.EOF) {
+                    return node;
+                } else {
+                    // System.out.println("ADVANCE POR ERRO " + token.toString());
+                    advance();
+                }
+
+            }
+
+        }
+    } else {
+        errorService.showError(lexer.line, "stmt-list");
+    }
+    return node;
+}
+
+   // stmt ::= assign-stmt ";" | if-stmt | while-stmt | read-stmt ";" | write-stmt
     // ";"
     public Node stmt() {
         Node node = new Node();
@@ -199,7 +226,7 @@ public class ParserService {
             }
         } else if (token.getTag() == Tag.IF) {
             ifStmt();
-        } else if (token.getTag() == Tag.WHILE) {
+        } else if (token.getTag() == Tag.DO) {
             whileStmt();
         } else if (token.getTag() == Tag.SCAN) {
             readStmt();
@@ -263,7 +290,7 @@ public class ParserService {
         return node;
     }
 
-    // if-stmt’​ ​::=​​ ​else​ ​stmt-list​ ​| λ
+    // if-stmt’​ ​::=​ ​end​ ​|​ ​else​ ​stmt-list​ ​end
     public Node ifStmtPrime() {
         Node node = new Node();
         if (token.getTag() == Tag.ELSE) {
@@ -271,11 +298,8 @@ public class ParserService {
                 return node;
             }
             stmtList();
-            if (token.getTag() == Tag.END) {
-                if (!eat(Tag.END)) {
-                    return node;
-                }
-            }
+        } else if (token.getTag() == Tag.END) {
+
         } else {
             errorService.showError(lexer.line, "if-stmt'");
         }
@@ -286,13 +310,13 @@ public class ParserService {
     // condition ::= expression
     public Node condition() {
         Node node = new Node();
-        if (token.getTag() == Tag.IDENTIFIER ||
-                token.getTag() == Tag.DIGIT ||
-                token.getTag() == Tag.FLOAT_CONST ||
-                token.getTag() == Tag.LITERAL ||
-                token.getTag() == Tag.OPEN_PARENTHESES ||
-                token.getTag() == Tag.NOT ||
-                token.getTag() == Tag.MINUS) {
+        if (token.getTag() == Tag.IDENTIFIER
+                || token.getTag() == Tag.DIGIT
+                || token.getTag() == Tag.FLOAT_CONST
+                || token.getTag() == Tag.LITERAL
+                || token.getTag() == Tag.OPEN_PARENTHESES
+                || token.getTag() == Tag.NOT
+                || token.getTag() == Tag.MINUS) {
             expression();
         } else {
             errorService.showError(lexer.line, "condition");
@@ -380,17 +404,17 @@ public class ParserService {
     // writable ::= simple-expr | literal
     public Node writable() {
         Node node = new Node();
-        if (token.getTag() == Tag.IDENTIFIER ||
-                token.getTag() == Tag.DIGIT ||
-                token.getTag() == Tag.FLOAT_CONST ||
-                token.getTag() == Tag.OPEN_PARENTHESES ||
-                token.getTag() == Tag.NOT ||
-                token.getTag() == Tag.MINUS ||
-                token.getTag() == Tag.LITERAL) {
+        if (token.getTag() == Tag.IDENTIFIER
+                || token.getTag() == Tag.DIGIT
+                || token.getTag() == Tag.FLOAT_CONST
+                || token.getTag() == Tag.OPEN_PARENTHESES
+                || token.getTag() == Tag.NOT
+                || token.getTag() == Tag.MINUS
+                || token.getTag() == Tag.LITERAL) {
 
             node.setType(simpleExpr().getType());
 
-        } else if (token.getTag() == Tag.LITERAL) {
+            // } else if (token.getTag() == Tag.LITERAL) {
 
             // node.setType(literal().getType());
 
@@ -403,13 +427,13 @@ public class ParserService {
     // expression​ ​::=​ ​simple-expr​ ​expression’
     public Node expression() {
         Node node = new Node();
-        if (token.getTag() == Tag.IDENTIFIER ||
-                token.getTag() == Tag.DIGIT ||
-                token.getTag() == Tag.FLOAT_CONST ||
-                token.getTag() == Tag.OPEN_PARENTHESES ||
-                token.getTag() == Tag.NOT ||
-                token.getTag() == Tag.LITERAL ||
-                token.getTag() == Tag.MINUS) {
+        if (token.getTag() == Tag.IDENTIFIER
+                || token.getTag() == Tag.DIGIT
+                || token.getTag() == Tag.FLOAT_CONST
+                || token.getTag() == Tag.OPEN_PARENTHESES
+                || token.getTag() == Tag.NOT
+                || token.getTag() == Tag.LITERAL
+                || token.getTag() == Tag.MINUS) {
             node.setType(simpleExpr().getType());
             expressionPrime(node.getType());
         } else {
@@ -435,9 +459,11 @@ public class ParserService {
                 node.setType(type);
             }
 
-        } else if (token.getTag() == Tag.THEN ||
-                token.getTag() == Tag.END ||
-                token.getTag() == Tag.CLOSE_PARENTHESES) {
+        } else if (token.getTag() == Tag.THEN
+                || token.getTag() == Tag.END
+                || token.getTag() == Tag.CLOSE_PARENTHESES // ADICIONADO
+        // || token.getTag() == Tag.DOT_COMMA
+        ) {
 
         } else {
             errorService.showError(lexer.line, "expression'");
@@ -448,17 +474,17 @@ public class ParserService {
     // simple-expr​ ​::=​ ​term​ ​simple-expr’
     public Node simpleExpr() {
         Node node = new Node();
-        if (token.getTag() == Tag.IDENTIFIER ||
-                token.getTag() == Tag.DIGIT ||
-                token.getTag() == Tag.FLOAT_CONST ||
-                token.getTag() == Tag.LITERAL ||
-                token.getTag() == Tag.OPEN_PARENTHESES ||
-                token.getTag() == Tag.NOT ||
-                token.getTag() == Tag.MINUS) {
+        if (token.getTag() == Tag.IDENTIFIER
+                || token.getTag() == Tag.DIGIT
+                || token.getTag() == Tag.FLOAT_CONST
+                || token.getTag() == Tag.LITERAL
+                || token.getTag() == Tag.OPEN_PARENTHESES
+                || token.getTag() == Tag.NOT
+                || token.getTag() == Tag.MINUS
+                // ADICIONADO
+                || token.getTag() == Tag.PLUS) {
             node.setType(term().getType());
             simpleExprPrime(node.getType());
-        } else if (token.getTag() == Tag.CLOSE_PARENTHESES) {
-
         } else {
             errorService.showError(lexer.line, "simple-expr​");
         }
