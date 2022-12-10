@@ -67,9 +67,6 @@ public class runner {
             try {
                 parser = new ParserService(fullPath);
                 parser.start();
-                if (parser.isEOF()) {
-                    break;
-                }
             } catch (Exception e) {
                 // TODO: handle exception
             }

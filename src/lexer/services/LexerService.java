@@ -18,7 +18,6 @@ import semantic.models.SymbolTableElement;
 public class LexerService {
 
     public static int line = 1; // contador de linhas
-    public boolean isEOF;
     private char ch = ' '; // caractere lido do arquivo
     private FileReader file;
 
@@ -238,7 +237,6 @@ public class LexerService {
 
         if (ch == '￿') {
             Token eof = new EndOfFile(line, String.valueOf(ch));
-            setEOF(true);
             return eof;
         }
 
@@ -258,13 +256,5 @@ public class LexerService {
 
     public void setWords(Hashtable<String, SymbolTableElement> words) {
         this.words = words;
-    }
-
-    public boolean isEOF() {
-        return isEOF;
-    }
-
-    public void setEOF(boolean isEOF) {
-        this.isEOF = isEOF;
     }
 }

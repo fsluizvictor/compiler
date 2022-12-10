@@ -13,7 +13,6 @@ public class ParserService {
 
     private final LexerService lexer;
     private Token token;
-    private boolean isEOF;
     private ErrorService errorService;
     private SemanticErrorService semanticErrorService;
 
@@ -24,7 +23,6 @@ public class ParserService {
     public ParserService(String filename) throws FileNotFoundException {
         lexer = new LexerService(filename);
         errorService = new ErrorService();
-        this.isEOF = false;
         semanticErrorService = new SemanticErrorService();
     }
 
@@ -32,10 +30,6 @@ public class ParserService {
         try {
             // lê o arquivo
             token = lexer.scan();
-            System.out.println(token);
-            if (token.getTag() == Tag.EOF) {
-                setEOF(true);
-            }
             // se o int do tokenen do scan for igual ao int da Tag
             if (token.getTag() == Tag.COMMENT_LINE || token.getTag() == Tag.COMMENT_BLOCK || token.tag == Tag.ERROR) {
                 advance();
@@ -46,22 +40,18 @@ public class ParserService {
         }
     }
 
-    public boolean isEOF() {
-        return isEOF;
-    }
-
-    public void setEOF(boolean isEOF) {
-        this.isEOF = isEOF;
-    }
-
     /**
      * @param tag
      * @return
      */
     private boolean eat(int tag) {
         if (token.getTag() == tag) {
+            System.out.print("TOKEN: " + token.toString());
             advance();
+            System.out.print("\t Consumido\n");
             return true;
+        } else {
+            System.out.println(("Syntax error --> Missing token: " + tag + "\t" + (char) tag));
         }
         return false;
     }
@@ -90,7 +80,7 @@ public class ParserService {
 
         stmtList();
 
-        if(!eat(Tag.EXIT)){
+        if (!eat(Tag.EXIT)) {
             return node;
         }
 
@@ -103,11 +93,12 @@ public class ParserService {
         if (token.getTag() == Tag.INT ||
                 token.getTag() == Tag.STRING ||
                 token.getTag() == Tag.FLOAT) {
-            do {
-                decl();
-            } while (token.getTag() == Tag.INT ||
+            decl();
+            while (token.getTag() == Tag.INT ||
                     token.getTag() == Tag.STRING ||
-                    token.getTag() == Tag.FLOAT);
+                    token.getTag() == Tag.FLOAT) {
+                decl();
+            }
         } else {
             errorService.showError(lexer.line, "decl-list");
         }
@@ -183,13 +174,14 @@ public class ParserService {
                 token.getTag() == Tag.DO ||
                 token.getTag() == Tag.SCAN ||
                 token.getTag() == Tag.PRINT) {
-            do {
-                stmt();
-            } while (token.getTag() == Tag.IDENTIFIER ||
+            stmt();
+            while (token.getTag() == Tag.IDENTIFIER ||
                     token.getTag() == Tag.IF ||
                     token.getTag() == Tag.DO ||
                     token.getTag() == Tag.SCAN ||
-                    token.getTag() == Tag.PRINT);
+                    token.getTag() == Tag.PRINT) {
+                stmt();
+            }
         } else {
             errorService.showError(lexer.line, "stmt-list");
         }
@@ -249,7 +241,7 @@ public class ParserService {
         return node;
     }
 
-    // if-stmt​ ​::=​ ​if​ ​condition​ ​then​ ​stmt-list​ ​if-stmt’
+    // if-stmt​ ​::=​ ​if​ ​condition​ ​then​ ​stmt-list​ ​if-stmt’ end
     public Node ifStmt() {
         Node node = new Node();
         if (token.getTag() == Tag.IF) {
@@ -262,20 +254,19 @@ public class ParserService {
             }
             stmtList();
             ifStmtPrime();
+            if (!eat(Tag.END)) {
+                return node;
+            }
         } else {
             errorService.showError(lexer.line, "if-stmt");
         }
         return node;
     }
 
-    // if-stmt’​ ​::=​ ​end​ ​|​ ​else​ ​stmt-list​ ​end
+    // if-stmt’​ ​::=​​ ​else​ ​stmt-list​ ​| λ
     public Node ifStmtPrime() {
         Node node = new Node();
-        if (token.getTag() == Tag.END) {
-            if (!eat(Tag.END)) {
-                return node;
-            }
-        } else if (token.getTag() == Tag.ELSE) {
+        if (token.getTag() == Tag.ELSE) {
             if (!eat(Tag.ELSE)) {
                 return node;
             }
@@ -296,14 +287,12 @@ public class ParserService {
     public Node condition() {
         Node node = new Node();
         if (token.getTag() == Tag.IDENTIFIER ||
-                token.getTag() == Tag.OPEN_PARENTHESES ||
-                token.getTag() == Tag.NOT ||
-                token.getTag() == Tag.MINUS ||
-                token.getTag() == Tag.PLUS ||
                 token.getTag() == Tag.DIGIT ||
                 token.getTag() == Tag.FLOAT_CONST ||
                 token.getTag() == Tag.LITERAL ||
-                token.getTag() == Tag.OR) {
+                token.getTag() == Tag.OPEN_PARENTHESES ||
+                token.getTag() == Tag.NOT ||
+                token.getTag() == Tag.MINUS) {
             expression();
         } else {
             errorService.showError(lexer.line, "condition");
@@ -396,13 +385,14 @@ public class ParserService {
                 token.getTag() == Tag.FLOAT_CONST ||
                 token.getTag() == Tag.OPEN_PARENTHESES ||
                 token.getTag() == Tag.NOT ||
-                token.getTag() == Tag.MINUS) {
+                token.getTag() == Tag.MINUS ||
+                token.getTag() == Tag.LITERAL) {
 
             node.setType(simpleExpr().getType());
 
         } else if (token.getTag() == Tag.LITERAL) {
 
-            node.setType(literal().getType());
+            // node.setType(literal().getType());
 
         } else {
             errorService.showError(lexer.line, "writable");
@@ -418,7 +408,7 @@ public class ParserService {
                 token.getTag() == Tag.FLOAT_CONST ||
                 token.getTag() == Tag.OPEN_PARENTHESES ||
                 token.getTag() == Tag.NOT ||
-                token.getTag() == Tag.OR ||
+                token.getTag() == Tag.LITERAL ||
                 token.getTag() == Tag.MINUS) {
             node.setType(simpleExpr().getType());
             expressionPrime(node.getType());
@@ -459,13 +449,16 @@ public class ParserService {
     public Node simpleExpr() {
         Node node = new Node();
         if (token.getTag() == Tag.IDENTIFIER ||
-                token.getTag() == Tag.OPEN_PARENTHESES ||
-                token.getTag() == Tag.NOT ||
                 token.getTag() == Tag.DIGIT ||
                 token.getTag() == Tag.FLOAT_CONST ||
+                token.getTag() == Tag.LITERAL ||
+                token.getTag() == Tag.OPEN_PARENTHESES ||
+                token.getTag() == Tag.NOT ||
                 token.getTag() == Tag.MINUS) {
             node.setType(term().getType());
             simpleExprPrime(node.getType());
+        } else if (token.getTag() == Tag.CLOSE_PARENTHESES) {
+
         } else {
             errorService.showError(lexer.line, "simple-expr​");
         }
@@ -520,7 +513,8 @@ public class ParserService {
                 token.getTag() == Tag.NOT ||
                 token.getTag() == Tag.DIGIT ||
                 token.getTag() == Tag.FLOAT_CONST ||
-                token.getTag() == Tag.MINUS) {
+                token.getTag() == Tag.MINUS ||
+                token.getTag() == Tag.LITERAL) {
             node.setType(factorA().getType());
             termPrime();
         } else {
@@ -549,7 +543,15 @@ public class ParserService {
                 semanticErrorService.unexpectedTagError(Tag.STRING, node.getType());
             }
 
-            termPrime();
+            if (token.getTag() == Tag.MULTIPLICATION ||
+                    token.getTag() == Tag.DIVISION ||
+                    token.getTag() == Tag.AND ||
+                    token.getTag() == Tag.PLUS ||
+                    token.getTag() == Tag.MINUS ||
+                    token.getTag() == Tag.OR ||
+                    token.getTag() == Tag.DOT_COMMA) {
+                termPrime();
+            }
         } else if (token.getTag() == Tag.THEN ||
                 token.getTag() == Tag.END ||
                 token.getTag() == Tag.CLOSE_PARENTHESES ||
@@ -777,10 +779,10 @@ public class ParserService {
                     }
                 } else {
                     node.type = type;
-                    if(element.getType() == Tag.VOID_SEMANTIC_TAG ){
+                    if (element.getType() == Tag.VOID_SEMANTIC_TAG) {
                         element.setType(type);
                         lexer.setWords(sybleTable);
-                    }else{
+                    } else {
                         semanticErrorService.variableAlreadyDeclaredError();
                     }
                 }
