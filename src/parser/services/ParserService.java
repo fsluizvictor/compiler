@@ -46,9 +46,9 @@ public class ParserService {
      */
     private boolean eat(int tag) {
         if (token.getTag() == tag) {
-            System.out.print("TOKEN: " + token.toString());
+            // System.out.print("TOKEN: " + token.toString());
             advance();
-            System.out.print("\t Consumido\n");
+            // System.out.print("\t Consumido\n");
             return true;
         } else {
             System.out.println(("Syntax error --> Missing token: " + tag + "\t" + (char) tag));
@@ -71,7 +71,7 @@ public class ParserService {
 
         if (!eat(Tag.START)) {
             errorService.showError(lexer.line, "program");
-            //return node;
+            // return node;
         }
 
         if (token.getTag() == Tag.INT || token.getTag() == Tag.STRING || token.getTag() == Tag.FLOAT) {
@@ -168,54 +168,54 @@ public class ParserService {
         return node;
     }
 
-   // stmt-list ::= stmt {stmt}
-   public Node stmtList() {
-    Node node = new Node();
-    if (token.getTag() == Tag.IDENTIFIER
-            || token.getTag() == Tag.IF
-            || token.getTag() == Tag.DO
-            || token.getTag() == Tag.SCAN
-            || token.getTag() == Tag.PRINT
-            || token.getTag() == Tag.UNDERSCORE) {
-        // System.out.println("stmt1ª-stmtList");
-        stmt();
-        while (token.getTag() == Tag.IDENTIFIER
+    // stmt-list ::= stmt {stmt}
+    public Node stmtList() {
+        Node node = new Node();
+        if (token.getTag() == Tag.IDENTIFIER
                 || token.getTag() == Tag.IF
                 || token.getTag() == Tag.DO
                 || token.getTag() == Tag.SCAN
                 || token.getTag() == Tag.PRINT
                 || token.getTag() == Tag.UNDERSCORE) {
-            // System.out.println("stmt2ª-stmtList\t" + token.toString());
-
-            if (token.getTag() == Tag.IDENTIFIER
+            // System.out.println("stmt1ª-stmtList");
+            stmt();
+            while (token.getTag() == Tag.IDENTIFIER
                     || token.getTag() == Tag.IF
                     || token.getTag() == Tag.DO
                     || token.getTag() == Tag.SCAN
                     || token.getTag() == Tag.PRINT
                     || token.getTag() == Tag.UNDERSCORE) {
-                // System.out.println("ENTRADA STMT "+token.toString());
-                stmt();
+                // System.out.println("stmt2ª-stmtList\t" + token.toString());
 
-                // System.out.println("SAIDA STMT "+token.toString());
-            } else {
-                if (token.getTag() == Tag.EXIT
-                        && token.getTag() == Tag.EOF) {
-                    return node;
+                if (token.getTag() == Tag.IDENTIFIER
+                        || token.getTag() == Tag.IF
+                        || token.getTag() == Tag.DO
+                        || token.getTag() == Tag.SCAN
+                        || token.getTag() == Tag.PRINT
+                        || token.getTag() == Tag.UNDERSCORE) {
+                    // System.out.println("ENTRADA STMT "+token.toString());
+                    stmt();
+
+                    // System.out.println("SAIDA STMT "+token.toString());
                 } else {
-                    // System.out.println("ADVANCE POR ERRO " + token.toString());
-                    advance();
+                    if (token.getTag() == Tag.EXIT
+                            && token.getTag() == Tag.EOF) {
+                        return node;
+                    } else {
+                        // System.out.println("ADVANCE POR ERRO " + token.toString());
+                        advance();
+                    }
+
                 }
 
             }
-
+        } else {
+            errorService.showError(lexer.line, "stmt-list");
         }
-    } else {
-        errorService.showError(lexer.line, "stmt-list");
+        return node;
     }
-    return node;
-}
 
-   // stmt ::= assign-stmt ";" | if-stmt | while-stmt | read-stmt ";" | write-stmt
+    // stmt ::= assign-stmt ";" | if-stmt | while-stmt | read-stmt ";" | write-stmt
     // ";"
     public Node stmt() {
         Node node = new Node();
@@ -290,7 +290,7 @@ public class ParserService {
         return node;
     }
 
-    // if-stmt’​ ​::=​ ​end​ ​|​ ​else​ ​stmt-list​ ​end
+    // if-stmt’​ ​::=​​ ​else​ ​stmt-list​ ​| λ
     public Node ifStmtPrime() {
         Node node = new Node();
         if (token.getTag() == Tag.ELSE) {
@@ -298,8 +298,6 @@ public class ParserService {
                 return node;
             }
             stmtList();
-        } else if (token.getTag() == Tag.END) {
-
         } else {
             errorService.showError(lexer.line, "if-stmt'");
         }
@@ -414,10 +412,8 @@ public class ParserService {
 
             node.setType(simpleExpr().getType());
 
-            // } else if (token.getTag() == Tag.LITERAL) {
-
+        } else if (token.getTag() == Tag.LITERAL) {
             // node.setType(literal().getType());
-
         } else {
             errorService.showError(lexer.line, "writable");
         }
@@ -461,9 +457,7 @@ public class ParserService {
 
         } else if (token.getTag() == Tag.THEN
                 || token.getTag() == Tag.END
-                || token.getTag() == Tag.CLOSE_PARENTHESES // ADICIONADO
-        // || token.getTag() == Tag.DOT_COMMA
-        ) {
+                || token.getTag() == Tag.CLOSE_PARENTHESES) {
 
         } else {
             errorService.showError(lexer.line, "expression'");
@@ -481,7 +475,6 @@ public class ParserService {
                 || token.getTag() == Tag.OPEN_PARENTHESES
                 || token.getTag() == Tag.NOT
                 || token.getTag() == Tag.MINUS
-                // ADICIONADO
                 || token.getTag() == Tag.PLUS) {
             node.setType(term().getType());
             simpleExprPrime(node.getType());
@@ -499,19 +492,41 @@ public class ParserService {
                 token.getTag() == Tag.MINUS ||
                 token.getTag() == Tag.OR) {
 
+            Token first = token;
+
             addop();
 
             node.setType(term().getType());
 
-            // check the correct types of elements
-            if (node.getType() != Tag.INT ||
-                    node.getType() != Tag.FLOAT ||
-                    node.getType() != Tag.STRING) {
-                semanticErrorService.unexpectedTagError(type, node.getType());
-                node.setType(type);
+            if (first.getTag() == Tag.OR) {
+                if (node.type != Tag.INT && node.type != Tag.STRING) {
+                    semanticErrorService.unexpectedTagError(Tag.INT, node.type);
+                    semanticErrorService.unexpectedTagError(Tag.STRING, node.type);
+                    node.type = type;
+                }
+            } else {
+                if (node.type != type) {
+                    semanticErrorService.unexpectedTagError(type, node.type);
+                    node.type = type;
+                }
             }
 
-            simpleExprPrime(node.getType());
+            if (token.getTag() == Tag.PLUS ||
+                    token.getTag() == Tag.MINUS ||
+                    token.getTag() == Tag.OR ||
+                    token.getTag() == Tag.NE ||
+                    token.getTag() == Tag.EQ ||
+                    token.getTag() == Tag.GE ||
+                    token.getTag() == Tag.GT ||
+                    token.getTag() == Tag.LE ||
+                    token.getTag() == Tag.LT
+                    || token.getTag() == Tag.DOT_COMMA
+                    || token.getTag() == Tag.MULTIPLICATION || token.getTag() == Tag.DIVISION
+                    || token.getTag() == Tag.AND) {
+
+                simpleExprPrime(node.getType());
+
+            }
         } else if (token.getTag() == Tag.CLOSE_PARENTHESES ||
                 token.getTag() == Tag.DOT_COMMA ||
                 token.getTag() == Tag.THEN ||
@@ -556,17 +571,22 @@ public class ParserService {
         if (token.getTag() == Tag.MULTIPLICATION ||
                 token.getTag() == Tag.DIVISION ||
                 token.getTag() == Tag.AND) {
-
+            Token first = token;
             mulop();
 
-            node.setType(factorA().getType());
+            int aux = factorA().getType();
 
-            if (node.getType() != Tag.INT ||
-                    node.getType() != Tag.FLOAT ||
-                    node.getType() != Tag.STRING) {
-                semanticErrorService.unexpectedTagError(Tag.INT, node.getType());
-                semanticErrorService.unexpectedTagError(Tag.FLOAT, node.getType());
-                semanticErrorService.unexpectedTagError(Tag.STRING, node.getType());
+            if (first.getTag() == Tag.AND) {
+                if (aux != Tag.INT && aux != Tag.STRING) {
+                    semanticErrorService.unexpectedTagError(Tag.INT, aux);
+                    semanticErrorService.unexpectedTagError(Tag.STRING, aux);
+                    node.type = Tag.INT;
+                }
+            } else {
+                if (aux != Tag.INT) {
+                    semanticErrorService.unexpectedTagError(Tag.INT, aux);
+                    node.type = Tag.INT;
+                }
             }
 
             if (token.getTag() == Tag.MULTIPLICATION ||
@@ -787,14 +807,11 @@ public class ParserService {
         Node node = new Node();
 
         // check the uniqueness of each variable name
-        Hashtable<String, SymbolTableElement> sybleTable = lexer.getWords();
+        Hashtable<String, SymbolTableElement> symbleTable = lexer.getWords();
 
         if (token.getTag() == Tag.IDENTIFIER) {
-            if (!eat(Tag.IDENTIFIER)) {
-                return node;
-            }
 
-            SymbolTableElement element = sybleTable.get(token.getLexeme());
+            SymbolTableElement element = symbleTable.get(token.getLexeme());
 
             if (!element.equals(null)) {
                 if (type == Tag.VOID_SEMANTIC_TAG) {
@@ -807,9 +824,9 @@ public class ParserService {
                     node.type = type;
                     if (element.getType() == Tag.VOID_SEMANTIC_TAG) {
                         element.setType(type);
-                        lexer.setWords(sybleTable);
+                        lexer.setWords(symbleTable);
                     } else {
-                        semanticErrorService.variableAlreadyDeclaredError();
+                        semanticErrorService.variableAlreadyDeclaredError(element.getWord().getLexeme());
                     }
                 }
             }
@@ -817,6 +834,11 @@ public class ParserService {
         } else {
             errorService.showError(lexer.line, "identifier");
         }
+
+        if (!eat(Tag.IDENTIFIER)) {
+            return node;
+        }
+
         return node;
     }
 }
