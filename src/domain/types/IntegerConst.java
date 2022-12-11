@@ -1,4 +1,4 @@
-package lexer.models;
+package domain.types;
 
 public class IntegerConst extends Token {
 

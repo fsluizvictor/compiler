@@ -1,7 +1,7 @@
-package semantic.models;
+package domain.semantic;
 
-import lexer.models.Tag;
-import lexer.models.Word;
+import domain.types.Tag;
+import domain.types.Word;
 
 public class SymbolTableElement {
     private final Word word;

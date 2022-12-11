@@ -1,0 +1,18 @@
+start
+    int a, b, c;
+    float d, e, f, val;
+    a = 0; 
+    d = 3.5;
+    f = d / 1.2;
+    scan (a);
+    scan (c);
+    b = a * a;
+    c = b + a * (1 + a*c);
+    print ({Resultado: });
+    print (c);
+    d = 34.2;
+    e = val + 2.2;
+    print ({E: });
+    print (e);
+    a = (b + c)/2;
+exit

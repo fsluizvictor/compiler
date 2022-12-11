@@ -1,6 +1,6 @@
-package semantic.models;
+package domain.semantic;
 
-import lexer.models.Tag;
+import domain.types.Tag;
 
 public class Node {
     public int type = Tag.VOID_SEMANTIC_TAG;

@@ -1,21 +1,21 @@
-package lexer.services;
+package app.lexer;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Hashtable;
 
-import lexer.models.EndOfFile;
-import lexer.models.Error;
-import lexer.models.FloatConst;
-import lexer.models.IntegerConst;
-import lexer.models.Literal;
-import lexer.models.Tag;
-import lexer.models.Token;
-import lexer.models.Word;
-import semantic.models.SymbolTableElement;
+import domain.semantic.SymbolTableElement;
+import domain.types.EndOfFile;
+import domain.types.Error;
+import domain.types.FloatConst;
+import domain.types.IntegerConst;
+import domain.types.Literal;
+import domain.types.Tag;
+import domain.types.Token;
+import domain.types.Word;
 
-public class LexerService {
+public class Lexer {
 
     public static int line = 1; // contador de linhas
     private char ch = ' '; // caractere lido do arquivo
@@ -23,10 +23,10 @@ public class LexerService {
 
     private Hashtable<String, SymbolTableElement> words = new Hashtable<String, SymbolTableElement>();
 
-    public LexerService() {
+    public Lexer() {
     }
 
-    public LexerService(String fileName) throws FileNotFoundException {
+    public Lexer(String fileName) throws FileNotFoundException {
         try {
             file = new FileReader(fileName);
         } catch (Exception e) {

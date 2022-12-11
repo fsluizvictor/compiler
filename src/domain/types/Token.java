@@ -1,4 +1,4 @@
-package lexer.models;
+package domain.types;
 
 public class Token {
     public final int tag; // constante que representa o token
