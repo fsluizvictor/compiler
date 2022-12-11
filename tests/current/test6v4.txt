@@ -1,0 +1,24 @@
+/*
+    Testing comments
+*/
+// Testing comments
+start
+    int a, b;
+
+    int c;
+    c = a + b;
+    print (c);
+
+    int c;
+    c = a - b;
+    print (c);
+
+    int c;
+    c = a * b;
+    print (c);
+
+    int c;
+    c = a / b;
+    print (c);
+
+exit

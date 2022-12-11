@@ -1,10 +1,10 @@
-package lexer.models;
+package domain.types;
 
 public class Tag {
 
     public final static int
-            // Reserved words
-            PROGRAM = 256,
+    // Reserved words
+    PROGRAM = 256,
             START = 257,
             EXIT = 258,
             INT = 259,
@@ -42,12 +42,11 @@ public class Tag {
             GE = 284, // ">=",
             LT = 60, // "<",
             LE = 286, // "<=",
-            //NE = 287, // "!=",
+            // NE = 287, // "!=",
             OR = 288, // "||",
             AND = 289, // "&&",
             NOT = 33, // "!",
             NE = 290, // "<>",
-
 
             // ANOTHERS TOKENS
             IDENTIFIER = 291,
@@ -58,6 +57,9 @@ public class Tag {
             UNDERSCORE = 298,
 
             ERROR = 296,
-            EOF = 297;
-            
+            EOF = 297,
+
+            // SEMANTIC
+            ERROR_SEMANTIC_TAG = 298,
+            VOID_SEMANTIC_TAG = 299;
 }

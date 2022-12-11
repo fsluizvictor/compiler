@@ -1,4 +1,4 @@
-package lexer.models;
+package domain.types;
 
 public class Word extends Token {
     private String lexeme = "";
@@ -16,6 +16,7 @@ public class Word extends Token {
         this.lexeme = lexeme;
     }
 
+    @Override
     public String getLexeme() {
         return lexeme;
     }

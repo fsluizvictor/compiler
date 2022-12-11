@@ -1,4 +1,4 @@
-package lexer.models;
+package domain.types;
 
 public class EndOfFile extends Token {
     private int line;

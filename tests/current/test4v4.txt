@@ -7,11 +7,11 @@ start
     scan (sobrenome);
     msg = {Ola, } + nome + { } +
     sobrenome + {!};
-    msg = msg + 1;
+    msg = msg + {1};
     print (msg);
     scan (a);
     scan(b);
-    if (a>b) then
+    if (a > b) then
         aux = b;
         b = a;
         a = aux;

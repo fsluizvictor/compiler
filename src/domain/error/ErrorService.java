@@ -1,4 +1,4 @@
-package parser.services;
+package domain.error;
 
 public class ErrorService {
     public void showError(int line, String grammar) {

@@ -1,32 +1,32 @@
-package lexer.services;
+package app.lexer;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Hashtable;
 
-import lexer.models.EndOfFile;
-import lexer.models.Error;
-import lexer.models.FloatConst;
-import lexer.models.IntegerConst;
-import lexer.models.Literal;
-import lexer.models.Tag;
-import lexer.models.Token;
-import lexer.models.Word;
+import domain.semantic.SymbolTableElement;
+import domain.types.EndOfFile;
+import domain.types.Error;
+import domain.types.FloatConst;
+import domain.types.IntegerConst;
+import domain.types.Literal;
+import domain.types.Tag;
+import domain.types.Token;
+import domain.types.Word;
 
-public class LexerService {
+public class Lexer {
 
     public static int line = 1; // contador de linhas
-    public boolean isEOF;
     private char ch = ' '; // caractere lido do arquivo
     private FileReader file;
 
-    private Hashtable words = new Hashtable();
+    private Hashtable<String, SymbolTableElement> words = new Hashtable<String, SymbolTableElement>();
 
-    public LexerService() {
+    public Lexer() {
     }
 
-    public LexerService(String fileName) throws FileNotFoundException {
+    public Lexer(String fileName) throws FileNotFoundException {
         try {
             file = new FileReader(fileName);
         } catch (Exception e) {
@@ -36,7 +36,8 @@ public class LexerService {
     }
 
     private void reserve(Word word) {
-        words.put(word.getLexeme(), word);
+        SymbolTableElement element = new SymbolTableElement(word, Tag.VOID_SEMANTIC_TAG);
+        words.put(word.getLexeme(), element);
     }
 
     private void keepAllReservedWords() {
@@ -213,12 +214,14 @@ public class LexerService {
                 readch();
             } while (Character.isLetterOrDigit(ch) || Character.compare(ch, '_') == 0);
             String s = sb.toString();
-            Word w = (Word) words.get(s);
-            if (w != null)
-                return w; // palavra já existe na HashTable
-            w = new Word(s, Tag.IDENTIFIER);
-            words.put(s, w);
-            return w;
+            SymbolTableElement symbolTableElement = (SymbolTableElement) words.get(s);
+            if (symbolTableElement != null) {
+                return symbolTableElement.getWord(); // palavra já existe na HashTable
+            }
+            SymbolTableElement newSymbolTableElement = new SymbolTableElement(new Word(s, Tag.IDENTIFIER),
+                    Tag.VOID_SEMANTIC_TAG);
+            words.put(s, newSymbolTableElement);
+            return newSymbolTableElement.getWord();
         }
 
         // Literal
@@ -234,7 +237,6 @@ public class LexerService {
 
         if (ch == '￿') {
             Token eof = new EndOfFile(line, String.valueOf(ch));
-            setEOF(true);
             return eof;
         }
 
@@ -248,11 +250,11 @@ public class LexerService {
         words.values().forEach(word -> System.out.println(word));
     }
 
-    public boolean isEOF() {
-        return isEOF;
+    public Hashtable<String, SymbolTableElement> getWords() {
+        return words;
     }
 
-    public void setEOF(boolean isEOF) {
-        this.isEOF = isEOF;
+    public void setWords(Hashtable<String, SymbolTableElement> words) {
+        this.words = words;
     }
 }
